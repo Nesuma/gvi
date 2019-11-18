@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Leaflet</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+    integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+    crossorigin="" />
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    #map_canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    #checkbox_container {
+      position: fixed;
+      top: 1em;
+      right: 1em;
+      z-index: 1000;
+      opacity: 0.5;
+    }
+
+    #checkbox_container:hover {
+      opacity: 1.0;
+      background-color: white;
+    }
+  </style>
+</head>
+
+<body onload="initialize()">
+  <div id="map_canvas"></div>
+  <div id="checkbox_container">
+    <fieldset>
+      <h3>Zeige Aktivitäten</h3>
+      <ul style="list-style-type:none">
+        <li>
+          <label>
+            <input type="checkbox" id="artCheck" value="art" onchange="update()" checked>
+            Kunst & Kultur
+          </label>
+        </li>
+        <li>
+          <label>
+            <input type="checkbox" id="foodCheck" value="food" onchange="update()" checked>
+            Essen & Trinken
+          </label>
+        </li>
+        <li>
+          <label>
+            <input type="checkbox" id="sleepCheck" value="checked" onchange="update()" checked>
+            Wohnen
+          </label>
+        </li>
+        <li>
+          <label>
+            <input type="checkbox" id="trainCheck" value="train" onchange="update()" checked>
+            S-Bahn Station
+          </label>
+        </li>
+      </ul>
+    </fieldset>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+    integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+    crossorigin=""></script>
+  <script>
+    const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
+    const geocodeParams = '&format=json&limit=1';
+    var map = null;
+
+    var artIcon = L.icon({
+      iconUrl: 'images/arts.png',
+      iconSize: [32, 37], // size of the icon
+      iconAnchor: [0, 32],
+      popupAnchor: [0, -32]
+    });
+    var foodIcon = L.icon({
+      iconUrl: 'images/food.png',
+      iconSize: [32, 37],
+      iconAnchor: [0, 32],
+      popupAnchor: [0, -32]
+    })
+    var sleepIcon = L.icon({
+      iconUrl: 'images/sleep.png',
+      iconSize: [32, 37],
+      iconAnchor: [0, 32],
+      popupAnchor: [0, -32]
+    })
+    var trainIcon = L.icon({
+      iconUrl: 'images/tramway.png',
+      iconSize: [32, 37],
+      iconAnchor: [0, 32],
+      popupAnchor: [0, -32]
+    })
+
+    let activities = [new Activity("Cinemaxx", "Cinemaxx, 70174 Stuttgart", "Kunst & Kultur"),
+    new Activity("Sausalitos", "Theodor-Heuss-Straße 10 Stuttgart", "Essen & Trinken"),
+    new Activity("Mensa", "Mensa Stuttgart-Mitte, Stuttgart", "Essen & Trinken"),
+    new Activity("Food Lounge", "Food Lounge, 70173 Stuttgart", "Essen & Trinken"),
+    new Activity("Coa Wok & Bowls", "Lautenschlagerstraße 23, 70173 Stuttgart", "Essen & Trinken"),
+    new Activity("Sophie’s Brauhaus", "Marienstraße 28, 70178 Stuttgart", "Essen & Trinken"),
+    new Activity("Liederhalle", "Berliner Pl. 1-3 Stuttgart", "Kunst & Kultur"),
+    new Activity("Studio Theather", " Hohenheimer Str. 44, 70184 Stuttgart", "Kunst & Kultur"),
+    new Activity("Staatsoper", "Opernhaus, 70173 Stuttgart", "Kunst & Kultur"),
+    new Activity("Schauspielhaus", "Schauspielhaus, 70173 Stuttgart", "Kunst & Kultur"),
+    new Activity("Innenstadtkinos", "Gloria Stuttgart, 70173 Stuttgart", "Kunst & Kultur"),
+    new Activity("Max Kade Haus", "Holzgartenstraße 9A, 70174 Stuttgart-Mitte", "Wohnen"),
+    new Activity("Johannesstraße", "Johannesstraße 90-92, 70176 Stuttgart", "Wohnen"),
+    new Activity("Wiederholdstraße", "Wiederholdstraße 2, 70174 Stuttgart-Mitte", "Wohnen"),
+    new Activity("Theodor-Heuss-Heim", "Rosenbergstraße 68, 70176 Stuttgart-West", "Wohnen"),
+    new Activity("Hauptbahnhof", "Arnulf-Klett-Platz 2, Stuttgart", "Station"),
+    new Activity("Station Rotebühlplatz", "Rotebühlplatz, 70174 Stuttgart", "Station"),
+    new Activity("Station Feuersee", "Rotebühlstraße 63, Stuttgart", "Station"),
+    new Activity("Station Schwabstraße", "Schwabstraße, Stuttgart", "Station")]
+
+    function initialize() {
+      var center = L.latLng(48.778690, 9.179699);
+      var zoom = 14;
+      map = L.map('map_canvas').setView(center, zoom);
+      var osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        minZoom: 2,
+        maxZoom: 18
+      });
+      map.addLayer(osm);
+      update();
+    }
+
+    function Activity(name, address, title) {
+      this.name = name;
+      this.address = address;
+      this.title = title;
+      geocode(name, address, title);
+    }
+
+    let checkFood;
+    let checkArt;
+    let checkSleep;
+    let checkTrain;
+    let layerGroup = L.layerGroup();
+
+    function update() {
+      layerGroup.clearLayers();
+      checkFood = document.getElementById("foodCheck").checked;
+      checkArt = document.getElementById("artCheck").checked;
+      checkSleep = document.getElementById("sleepCheck").checked;
+      checkTrain = document.getElementById("trainCheck").checked;
+      activities.forEach(activity => {
+        geocode(activity.name, activity.address, activity.title)
+      });
+      layerGroup.addTo(map);
+    }
+
+    function geocode(name, address, title) {
+      var encoded = encodeURI([geocodeUrl, address, geocodeParams].join(''));
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", encoded, true);
+      xhr.responseType = 'json';
+      xhr.onload = function () {
+        if (xhr.response.length == 0) {
+          alert("No place found");
+          return;
+        }
+        let place = xhr.response[0];
+        let marker = checkActivity(place, title);
+        if (marker !== undefined) {
+          marker.addTo(layerGroup);
+          marker.bindPopup(name);
+        }
+      };
+      xhr.onerror = function () {
+        console.error(xhr.statusText);
+      };
+      xhr.send();
+    }
+
+    function checkActivity(place, title) {
+      if (title == "Essen & Trinken" && checkFood) {
+        return L.marker([place.lat, place.lon],
+          { icon: foodIcon });
+      } else if (title == "Kunst & Kultur" && checkArt) {
+        return L.marker([place.lat, place.lon],
+          { icon: artIcon });
+      } else if (title == "Wohnen" && checkSleep) {
+        return L.marker([place.lat, place.lon],
+          { icon: sleepIcon });
+      } else if (title == "Station" && checkTrain) {
+        return L.marker([place.lat, place.lon],
+          { icon: trainIcon });
+      } else {
+        return;
+      }
+    }
+    window.onload = initialize;
+  </script>
+</body>
+
+</html>
