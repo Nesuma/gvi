@@ -93,7 +93,7 @@
                                 density > 40 ? '#00e64d' :
                                     density > 20 ? '#1aff66' :
                                         density > 10 ? '#66ff99' :
-                                                '#ccffdd';
+                                            '#ccffdd';
     }
 
     function style(feature) {
@@ -177,14 +177,10 @@
             maxZoom: 18
         }).addTo(map);
 
-        Promise.all([
-            fetch('http://localhost:8003/countries3.csv'),
-            fetch('http://localhost:8003/admin.csv')
-        ]).then(values => Promise.all(values.map(v => v.text())))
-            .then(result => {
-                //countries = csvJSON(result[0]); // not necessary anymore, calculating density countries outside europe too
-
-                administrations = csvJSON(result[1]);
+        fetch('http://localhost:8003/admin.csv')
+            .then(response => response.text())
+            .then(data => {
+                administrations = csvJSON(data);
 
                 countries = GetPopulations(administrations);
 
@@ -211,15 +207,6 @@
 
 
                 };
-                //     // loop through our density intervals and generate a label with a colored square for each interval
-                //     for (var i = 0; i < grades.length; i++) {
-                //         div.innerHTML +=
-                //             '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-                //             grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-                //     }
-                //
-                //     return div;
-                // };
                 legend.addTo(map);
 
             })
