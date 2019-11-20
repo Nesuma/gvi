@@ -81,12 +81,25 @@
                 json.data.forEach(element => {
                     objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
                 });
-                console.log(objects);
-
+                //console.log(objects);
+                
+                //Den issues zuordnen?
+                let indicator6_1 = [];
+                let indicator6_2 = [];
+                objects.forEach(element => {
+                    if(element.indicator == "6.1.1") {
+                        indicator6_1.push(element);
+                    } else {
+                        indicator6_2.push(element);
+                    }
+                })
+                //console.log(indicator6_1); 
+                //console.log(indicator6_2);
             });
 
             
-
+            
+            
 
             /**
           
