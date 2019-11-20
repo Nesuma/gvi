@@ -66,16 +66,26 @@
             request.send(null);
         }
 
+        function DataObject(country, indicator, year, value) {
+            this.country = country;
+            this.indicator = indicator;
+            this.year = year;
+            this.value = value;
+        }
+
+        let objects = [];
         function initialize() {
             loadJSON(function (response) {
-                // Parse JSON string into object
                 let json = JSON.parse(response);
                 console.log(json);
-                
                 json.data.forEach(element => {
-                    console.log(element.geoAreaName)
+                    objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
                 });
+                console.log(objects);
+
             });
+
+            
 
 
             /**
