@@ -156,17 +156,12 @@
     function initialize() {
         loadJSON(function (response) {
             let json = JSON.parse(response);
-            console.log(json);
             json.data.forEach(element => {
                 objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
             });
-            //console.log(objects);
             let data_2015 = new YearObject("2015");
             let data_2016 = new YearObject("2016");
             let data_2017 = new YearObject("2017");
-            //Den issues zuordnen?
-            let indicator6_1 = [];
-            let indicator6_2 = [];
 
             objects.forEach(element => {
                 if (element.year == "2015") {
@@ -195,8 +190,6 @@
                 geocode(element);
             })
         });
-        //console.log(indicator6_1);
-        //console.log(indicator6_2);
 
         map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
 
