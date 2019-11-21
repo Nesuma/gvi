@@ -35,23 +35,8 @@
         crossorigin=""></script>
 
     <script>
-        /*---------------------------------------------------
-        * Hochschule für Technik Stuttgart
-        * Fachbereich Vermessung, Informatik und Mathematik
-        * Schellingstr. 24
-        * D-70174 Stuttgart
-        *
-        * Volker Coors
-        * 7.11.2018
-        *
-        * GeoVisualisierung
-        * 
-        * ------------------------------------------------*/
         var map
-        /**
-        * Die Methode initialize wird beim Laden der Webseite aufgerufen
-        * durch HTML <body onload="initialize()">, siehe unten.
-        */
+
         function loadJSON(callback) {
             let request = new XMLHttpRequest();
             request.overrideMimeType("application/json");
@@ -97,40 +82,8 @@
                 //console.log(indicator6_2);
             });
 
-            
-            
-            
-
-            /**
-          
-            * zoom level: 0 - 18
-            * 
-            * 0 - Weltkarte
-            *  ...
-            * 18 - Einzelgebäue
-            *
-            * siehe https://leafletjs.com/examples/zoom-levels/
-            * 
-            * setView:
-            * der erste Paramter definiert den Mittelpunkt der Karte in 
-            * Längen- und Breitengrad (Koordinatensystem WGS 84)
-            *
-            * Stuttgart - [48.81, 9.16]
-            * Sidney - [-33.51, 151.12]
-            *
-            */
             map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
-            /**
-            * Die Karte basiert auf OpenStreetmap Daten und wird von Mapbox als gekachelte 
-            * Rasterkarte bereitgestellt. Leider ist die Nutzung von MapBox auch mit einem 
-            * Geschäftsmodell verbunden, siehe https://www.mapbox.com/pricing/
-            * Aber bei geringer Nutzung sind die Karten kostenfrei.
-            * Als access token wird das token aus dem Leaflet Quickstart verwendet:
-            * https://leafletjs.com/examples/quick-start/
-            *
-            * anstelle einer Strassenkarte können auch Satellitenbilder genutzt werden:
-            * id: 'mapbox.satellite'
-            */
+
             var osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
                 minZoom: 2,
