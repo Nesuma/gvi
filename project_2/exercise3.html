@@ -227,11 +227,10 @@
           return;
         }
         let place = xhr.response[0];
-        let marker = L.marker([place.lat, place.lon],
-          { icon: drop0 });
+        let marker = checkPercentage(place, object.value);
         if (marker !== undefined) {
           marker.addTo(layerGroup);
-          marker.bindPopup(name);
+          marker.bindPopup(object.country + ": " + object.value + " in " + object.year);
         }
         layerGroup.addTo(map);
       };
@@ -242,20 +241,39 @@
     }
 
     function checkPercentage(place, value) {
-      if (value == "10%" && checkFood) {
+      if (value >= 0 && value < 10) {
         return L.marker([place.lat, place.lon],
-          { icon: foodIcon });
-      } else if (value == "20%" && checkArt) {
+          { icon: drop0 });
+      } else if (value >= 10 && value < 20) {
         return L.marker([place.lat, place.lon],
-          { icon: artIcon });
-      } else if (value == "30%" && checkSleep) {
+          { icon: drop0 });
+      } else if (value >= 20 && value < 30) {
         return L.marker([place.lat, place.lon],
-          { icon: sleepIcon });
-      } else if (value == "Station" && checkTrain) {
+          { icon: drop0 });
+      } else if (value >= 30 && value < 40) {
         return L.marker([place.lat, place.lon],
-          { icon: trainIcon });
-      } else {
-        return;
+          { icon: drop0 });
+      } else if (value >= 40 && value < 50) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
+      } else if (value >= 50 && value < 60) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
+      } else if (value >= 60 && value < 70) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
+      } else if (value >= 70 && value < 80) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
+      } else if (value >= 80 && value < 90) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
+      } else if (value >= 90 && value < 100) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
+      } else if (value == 100) {
+        return L.marker([place.lat, place.lon],
+          { icon: drop0 });
       }
     }
 </script>
