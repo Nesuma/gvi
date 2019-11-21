@@ -37,12 +37,85 @@
     <script>
         var map
 
+        var areaCodes = [
+            "112", // Belarus
+            "100", // Bulgaria
+            "203", // Czechia
+            "348", // Hungary
+            "498", // Moldova
+            "616", // Poland
+            "642", // Romania
+            "643", // Russia
+            "703", // Slovakia
+            "804", // Ukraine
+            "208", // Denmark
+            "233", // Estonia
+            "234", // Faroe Island
+            "246", // Finland
+            "352", // Iceland
+            "372", // Ireland
+            "833", // Isle of Man
+            "428", // Latvia
+            "440", // Lithuania
+            "578", // Norway
+            "752", // Sweden
+            "826", // UK
+            "008", // Albania
+            "020", // Andorra
+            "070", // Bosnia
+            "191", // Croatia
+            "292", // Gibraltar
+            "300", // Greece
+            "380", // Italy
+            "807", // Macedonia
+            "470", // Malta
+            "499", // Montenegro
+            "620", // Portugal
+            "674", // San Marino
+            "688", // Serbia
+            "705", // Slovenia
+            "040", // Austria
+            "056", // Belgium
+            "250", // France
+            "276", // Germany
+            "438", // Liechtenstein
+            "442", // Luxembourg
+            "492", // Monaco
+            "528", // Netherlands
+            "756", // Switzerland
+        ];
+
+        var timePeriods = [
+            "2015",
+            "2016",
+            "2017"
+        ]
+
+        function GetTimePeriods(){
+            result ="";
+            timePeriods.forEach(element => {result += ("&timePeriod=" + element);})
+            return result;
+        }
+
+        function GetAreaCodes(){
+            result ="";
+            areaCodes.forEach(element => {result += ("&areaCode=" + element);})
+            return result;
+        }
+
         function loadJSON(callback) {
             let request = new XMLHttpRequest();
             request.overrideMimeType("application/json");
             //request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaCode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
             //Europe: request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=150&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-            request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaCode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod=2016&timePeriod=2017&pageSize=829', true);
+            // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=' +
+            //     '100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&' +
+            //     'areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=' +
+            //     '744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=' +
+            //     '380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaC' +
+            //     'ode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod' +
+            //     '=2016&timePeriod=2017&pageSize=829', true);
+            request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2'+GetAreaCodes()+GetTimePeriods()+'&pageSize=829', true)
             request.onreadystatechange = function () {
                 if (request.readyState == 4 && request.status == "200") {
                     callback(request.responseText);
