@@ -38,12 +38,23 @@
     var map;
     const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
     const geocodeParams = '&format=json&limit=1';
-    var drop0 = L.icon({
-      iconUrl: 'images/drop0.png',
-      iconSize: [20, 35], // size of the icon
-      iconAnchor: [20, 30],
-      popupAnchor: [0, -32]
-    });
+
+    drop_icons = [];
+
+    function GetDrops(path) {
+        for (i = 0; i <= 10; i ++) {
+            let factor = (10 + i) / 10 - 1;
+            drop_icons[i] = L.icon({
+                iconUrl: path + '/drop' + (i*10) + '.png',
+                iconSize: [20*factor, 35*factor], // size of the icon
+                iconAnchor: [20, 30],
+                popupAnchor: [0, -32]
+            });
+        }
+        console.log(drop_icons);
+
+    }
+
     var areaCodes = [
         "112", // Belarus
         "100", // Bulgaria
@@ -152,8 +163,8 @@
     let objects = [];
 
 
-
     function initialize() {
+        GetDrops("images");
         loadJSON(function (response) {
             let json = JSON.parse(response);
             json.data.forEach(element => {
@@ -185,7 +196,7 @@
                 }
             });
             console.log(data_2015);
-            
+
             data_2015.water.forEach(element => {
                 geocode(element);
             })
@@ -210,64 +221,135 @@
     let layerGroup = L.layerGroup();
 
     function geocode(object) {
-      var encoded = encodeURI([geocodeUrl, object.country, geocodeParams].join(''));
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", encoded, true);
-      xhr.responseType = 'json';
-      xhr.onload = function () {
-        if (xhr.response.length == 0) {
-          alert("No place found");
-          return;
-        }
-        let place = xhr.response[0];
-        let marker = checkPercentage(place, object.value);
-        if (marker !== undefined) {
-          marker.addTo(layerGroup);
-          marker.bindPopup(object.country + ": " + object.value + " in " + object.year);
-        }
-        layerGroup.addTo(map);
-      };
-      xhr.onerror = function () {
-        console.error(xhr.statusText);
-      };
-      xhr.send();
+        var encoded = encodeURI([geocodeUrl, object.country, geocodeParams].join(''));
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", encoded, true);
+        xhr.responseType = 'json';
+        xhr.onload = function () {
+            if (xhr.response.length == 0) {
+                alert("No place found");
+                return;
+            }
+            let place = xhr.response[0];
+            let marker = setIcons(place, object.value);
+            if (marker !== undefined) {
+                marker.addTo(layerGroup);
+                marker.bindPopup(object.country + ": " + object.value + " in " + object.year);
+            }
+            layerGroup.addTo(map);
+        };
+        xhr.onerror = function () {
+            console.error(xhr.statusText);
+        };
+        xhr.send();
     }
 
-    function checkPercentage(place, value) {
-      if (value >= 0 && value < 10) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 10 && value < 20) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 20 && value < 30) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 30 && value < 40) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 40 && value < 50) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 50 && value < 60) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 60 && value < 70) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 70 && value < 80) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 80 && value < 90) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 90 && value < 100) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value == 100) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      }
+    // function getColor(percentage) {
+    //     return percentage > 95 ? '#001a09' :
+    //         percentage > 90 ? '#003311' :
+    //             percentage > 85 ? '#004d1a' :
+    //                 percentage > 80 ? '#006622' :
+    //                     percentage > 75 ? '#00802b' :
+    //                         percentage > 70 ? '#00b33c' :
+    //                             percentage > 65 ? '#00e64d' :
+    //                                 percentage > 60 ? '#1aff66' :
+    //                                     percentage > 55 ? '#66ff99' :
+    //                                         '#ccffdd';
+    // }
+    //
+    // function style(feature) {
+    //     let name = feature.properties.NAME;
+    //
+    //     console.log(name);
+    //
+    //     let color = countries.has(name) ? getColor(getPercentage(name)) : '#ffffff';
+    //
+    //     return {
+    //         fillColor: color,
+    //         weight: 2,
+    //         opacity: 1,
+    //         color: 'white',
+    //         dashArray: '3',
+    //         fillOpacity: 0.8
+    //     };
+    // }
+    //
+    // function getPercentage(country_name) {
+    //     // filters useless data
+    //
+    //
+    //
+    //     let densities = new Map();
+    //
+    //     let useless = ['FIPS_ADMIN,C,4', 'GMI_ADMIN,C,254', 'ADMIN_NAME,C,42', 'FIPS_CNTRY,C,2', 'GMI_CNTRY,C,3', 'TYPE_ENG,C,26', 'TYPE_LOC,C,50',
+    //         'SQMI,N,12,2', 'COLOR_MAP,C,2', 'test,N,5,3', 'test2,N,5,3'];
+    //
+    //     for (let entry of administrations) {
+    //         for (info of useless) {
+    //             delete entry[info]
+    //         }
+    //
+    //         administration_name = entry[a_name];
+    //         administration_population = entry[a_pop];
+    //         administration_area = entry[a_area];
+    //
+    //         let pop = parseInt(administration_population);
+    //         adjusted_pop = (pop > 0) ? pop : 0;
+    //
+    //         let area = parseInt(administration_area);
+    //
+    //         if (densities.has(administration_name)) {
+    //             let temp_values = densities.get(administration_name);
+    //
+    //             temp_values[0] += adjusted_pop;
+    //             temp_values[1] += area;
+    //
+    //             densities.set(administration_name, temp_values);
+    //         } else {
+    //             densities.set(administration_name, [adjusted_pop, area]);
+    //         }
+    //     }
+    //     return densities;
+    // }
+    //
+    //
+    // function drawChoropleth
+
+    function setIcons(place, value) {
+        if (value >= 0 && value < 10) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[0]});
+        } else if (value >= 10 && value < 20) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[1]});
+        } else if (value >= 20 && value < 30) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[2]});
+        } else if (value >= 30 && value < 40) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[3]});
+        } else if (value >= 40 && value < 50) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[4]});
+        } else if (value >= 50 && value < 60) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[5]});
+        } else if (value >= 60 && value < 70) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[6]});
+        } else if (value >= 70 && value < 80) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[7]});
+        } else if (value >= 80 && value < 90) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[8]});
+        } else if (value >= 90 && value < 100) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[9]});
+        } else if (value == 100) {
+            return L.marker([place.lat, place.lon],
+                {icon: drop_icons[10]});
+        }
     }
 </script>
 </body>
