@@ -229,7 +229,7 @@
         // define polygon style
         function style(feature) {
             return {
-                fillColor: getColor(feature.properties.POP_ADMIN / feature.properties.SQKM),
+                fillColor: getColor(feature.data.value),
                 weight: 1,
                 opacity: 1,
                 color: 'white',
@@ -253,7 +253,6 @@
             }
         }
 
-        
 
         // call on load
         function initialize() {
@@ -261,34 +260,76 @@
             // initialize map
             let map = L.map('map_canvas').setView([48.75, 9.21], 7);
 
-            // add humanitarian tile layer to map
             let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
             }).addTo(map);
-
-            // read shapefile
             var shapefile = 'files/World/Cntry00';
+            let europe = [];
 
-            // parse shapefile to geoJson
+            //get european countries
             shp(shapefile).then(function (data) {
-                // add geoJson Layer and add to map
-                let europe = [];
                 data.features.forEach(country => {
                     if (country.properties.FIRST_FIRS == "Europe") {
                         europe.push(country);
                     }
                 });
+                data.input = [];
+            });
+            console.log(europe);
+
+
+            loadJSON(function (response) {
+                let json = JSON.parse(response);
+                json.data.forEach(country => {
+                    objects.push(new DataObject(country.geoAreaName, country.indicator, country.timePeriodStart, country.series, country.value))
+                });
+                let data_2015 = new YearObject("2015");
+                let data_2016 = new YearObject("2016");
+                let data_2017 = new YearObject("2017");
+
+                objects.forEach(country => {
+                    if (country.year == "2015") {
+                        if (country.indicator == "6.1.1") {
+                            data_2015.water.push(country);
+                        } else {
+                            data_2015.soap.push(country);
+                        }
+                    } else if (country.year == "2016") {
+                        if (country.indicator == "6.1.1") {
+                            data_2016.water.push(country);
+                        } else {
+                            data_2016.soap.push(country);
+                        }
+                    } else {
+                        if (country.indicator == "6.1.1") {
+                            data_2017.water.push(country);
+                        } else {
+                            data_2017.soap.push(country);
+                        }
+                    }
+                });
+
+                
+                console.log(data_2015);
+                data_2015.water.forEach(country =>  {
+                    europe.forEach(input => {
+                        console.log(input);
+                        if(input.properties.CNTRY_NAME == country.country) {
+                            input.data = country;
+                        }
+                    });
+                })
                 console.log(europe);
                 
-                console.log(data)
+                //Möglichkeiten: 1. Vergleich Countries, 2. Während shape 
                 var geo = L.geoJson(europe, { style: style, onEachFeature: onEachFeature }).addTo(map);
 
-                // define Layers
                 let baseMaps = { "BaseLayer": osm };
                 let overlays = { "PopDensity": geo };
 
-                // add control for Layers
                 L.control.layers(baseMaps, overlays).addTo(map);
+
             });
+
 
 
         }
