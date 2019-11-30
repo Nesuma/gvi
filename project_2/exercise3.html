@@ -91,6 +91,8 @@
             "528", // Netherlands
             "756", // Switzerland
             "724", // Spain
+            "826", //	GBR
+            
         ];
 
         var timePeriods = [
@@ -209,25 +211,30 @@
 
         }*/
 
-        // color grading
         function getColor(density) {
-            return density > 700 ? '#330000' :
-                density > 500 ? '#4d0000' :
-                    density > 300 ? '#800000' :
-                        density > 200 ? '#990000' :
-                            density > 100 ? '#b30000' :
-                                density > 70 ? '#e60000' :
-                                    density > 50 ? '#ff4d4d' :
-                                        density > 20 ? '#ff8080' :
-                                            density > 10 ? '#ff9999' :
-                                                density > 5 ? '#ffcccc' :
-                                                    density > 0 ? '#ffe6e6' :
-                                                        '#cccccc';
-        }
+        return density > 1000 ? '#001a00' :
+            density > 600 ? '#003300' :
+                density > 400 ? '#004d00' :
+                    density > 300 ? '#006600' :
+                        density > 200 ? '#008000' :
+                            density > 150 ? '#00cc00' :
+                                density > 100 ? '#00e600' :
+                                    density > 70 ? '#33ff33' :
+                                        density > 40 ? '#4dff4d' :
+                                            density > 20 ? '#80ff80' :
+                                                density > 10 ? '#b3ffb3' :
+                                                    density > 5 ? '#ccffcc' :
+                                                        density > 0 ? '#e6ffe6' :
+                                                        '#dddddd';
+    }
 
 
         // define polygon style
         function style(feature) {
+            console.log(feature);
+            if(feature.data == undefined) {
+                return
+            }
             return {
                 fillColor: getColor(feature.data.value),
                 weight: 1,
@@ -242,7 +249,8 @@
         function onEachFeature(feature, layer) {
             //calculate Population Density
             var popDensity = Math.round((feature.properties.POP_ADMIN / feature.properties.SQKM) * 100) / 100;
-
+            //console.log(feature);
+            
             //add Pop-up with Population Density
             if (popDensity >= 0) {
                 let out = "<b>" + feature.properties.ADMIN_NAME + ", " + feature.properties.CNTRY_NAME + "</b><br>" + popDensity + " Einwohner/km&sup2";
@@ -274,7 +282,7 @@
                 });
                 data.input = [];
             });
-            console.log(europe);
+            //console.log(europe);
 
 
             loadJSON(function (response) {
@@ -309,16 +317,19 @@
                 });
 
                 
-                console.log(data_2015);
+               console.log(data_2015.water);
                 data_2015.water.forEach(country =>  {
                     europe.forEach(input => {
-                        console.log(input);
+                        //console.log(input);
                         if(input.properties.CNTRY_NAME == country.country) {
+                            input.data = country;
+                        } else if (country.country == "United Kingdom of Great Britain and Northern Ireland"
+                            && input.properties.CNTRY_NAME == "United Kingdom") {
                             input.data = country;
                         }
                     });
                 })
-                console.log(europe);
+               // console.log(europe);
                 
                 //Möglichkeiten: 1. Vergleich Countries, 2. Während shape 
                 var geo = L.geoJson(europe, { style: style, onEachFeature: onEachFeature }).addTo(map);
