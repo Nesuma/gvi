@@ -50,120 +50,56 @@
         integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
         crossorigin=""></script>
 
-<script type="text/javascript" src="states-data.js"></script>
 <script>
-    let c_name = "CNTRY_NAME,C,254";
-    let c_continent = "FIRST_FIRS,C,25";
-
-    let a_name = 'CNTRY_NAME,C,40';
-    let a_pop = 'POP_ADMIN,N,9,0';
-    let a_area = "SQKM,N,12,2";
-
-
-    let countries;
-
-    function csvJSON(csv) {
-        //console.log(csv);
-
-        lines = csv.split("\n");
-        //console.log(lines);
-        var result = [];
-
-        var headers = lines[0].split(";");
-        //console.log(headers);
-        for (var i = 1; i < lines.length; i++) {
-            var obj = {};
-            var currentline = lines[i].split(";");
-            for (var j = 0; j < headers.length; j++) {
-                obj[headers[j]] = currentline[j];
-            }
-            result.push(obj);
-        }
-        return result; //JavaScript object
-        //return JSON.stringify(result); //JSON
-    }
+    let european_countries = new Map();
 
     function getColor(density) {
-        return density > 400 ? '#001a09' :
-            density > 300 ? '#003311' :
-                density > 200 ? '#004d1a' :
-                    density > 150 ? '#006622' :
-                        density > 100 ? '#00802b' :
-                            density > 70 ? '#00b33c' :
-                                density > 40 ? '#00e64d' :
-                                    density > 20 ? '#1aff66' :
-                                        density > 10 ? '#66ff99' :
-                                            '#ccffdd';
+        return density > 1000 ? '#001a00' :
+            density > 600 ? '#003300' :
+                density > 400 ? '#004d00' :
+                    density > 300 ? '#006600' :
+                        density > 200 ? '#008000' :
+                            density > 150 ? '#00cc00' :
+                                density > 100 ? '#00e600' :
+                                    density > 70 ? '#33ff33' :
+                                        density > 40 ? '#4dff4d' :
+                                            density > 20 ? '#80ff80' :
+                                                density > 10 ? '#b3ffb3' :
+                                                    density > 5 ? '#ccffcc' :
+                                                        density > 0 ? '#e6ffe6' :
+                                                        '#dddddd';
     }
 
     function style(feature) {
-        let name = feature.properties.NAME;
-
-        console.log(name);
-
-        let color = countries.has(name) ? getColor(countries.get(name)[0] / countries.get(name)[1]) : '#ffffff';
-
         return {
-            fillColor: color,
-            weight: 2,
+            fillColor: getColor(feature.properties.POP_ADMIN / feature.properties.SQKM),
+            weight: 1,
             opacity: 1,
             color: 'white',
-            dashArray: '3',
+            dashArray: '1',
             fillOpacity: 0.8
         };
     }
 
-    function GetPopulations(administrations) {
-        // filters useless data
-        let densities = new Map();
-
-        let useless = ['FIPS_ADMIN,C,4', 'GMI_ADMIN,C,254', 'ADMIN_NAME,C,42', 'FIPS_CNTRY,C,2', 'GMI_CNTRY,C,3', 'TYPE_ENG,C,26', 'TYPE_LOC,C,50',
-            'SQMI,N,12,2', 'COLOR_MAP,C,2', 'test,N,5,3', 'test2,N,5,3'];
-
-        for (let entry of administrations) {
-            for (info of useless) {
-                delete entry[info]
-            }
-
-            administration_name = entry[a_name];
-            administration_population = entry[a_pop];
-            administration_area = entry[a_area];
-
-            let pop = parseInt(administration_population);
-            adjusted_pop = (pop > 0) ? pop : 0;
-
-            let area = parseInt(administration_area);
-
-            if (densities.has(administration_name)) {
-                let temp_values = densities.get(administration_name);
-
-                temp_values[0] += adjusted_pop;
-                temp_values[1] += area;
-
-                densities.set(administration_name, temp_values);
-            } else {
-                densities.set(administration_name, [adjusted_pop, area]);
+    function getEuropeanCountries(json) {
+        let result = new Map();
+        for (let i = 0; i < json.features.length; i++) {
+            if (json.features[i].properties.FIRST_FIRS === "Europe") {
+                result.set(json.features[i].properties.CNTRY_NAME, 1);
             }
         }
-        return densities;
+        return result;
     }
 
-    function OldGetDensity(populations, admin) {
-        console.log("tt")
-        console.log(admin);
-
-        let densities = new Map()
-
-        for (const [key, value] of populations.entries()) {
-            console.log(value);
-            console.log(admin[a_area]);
-            let density = value / admin[a_area];
-
-            densities.set(key, density);
+    function filterEuropeanDistricts(json, european_countries) {
+        let features = [];
+        for (let i = 0; i < json.features.length; i++) {
+            if (european_countries.has(json.features[i].properties.CNTRY_NAME)) {
+                features.push(json.features[i]);
+            }
         }
-
-        return densities;
-
+        json.features = features;
+        return json;
     }
 
     function initialize() {
@@ -177,22 +113,34 @@
             maxZoom: 18
         }).addTo(map);
 
-        fetch('http://localhost:8003/admin.csv')
-            .then(response => response.text())
-            .then(data => {
-                administrations = csvJSON(data);
+        //fetch('http://localhost:8003/admin.csv')
+        shp("files/World/Cntry00")
+            .then(countries => {
+                // administrations = csvJSON(data);
+                european_countries = getEuropeanCountries(countries, new Map([["Europe", 1]]));
 
-                countries = GetPopulations(administrations);
+                console.log(european_countries);
 
-                L.geoJson(statesData, {style: style}).addTo(map);
+                shp("files/World/admin00").then(districts => {
+
+                    let all_districs = L.geoJson(districts, {style: style});
+                    let european_disctrics = L.geoJson(filterEuropeanDistricts(districts, european_countries), {style: style});
+
+                    let background = {"Clear map": osm};
+                    let foreground = {"European density": european_disctrics, "World density": all_districs};
+
+                    L.control.layers(background, foreground).addTo(map);
+                });
 
                 var legend = L.control({position: 'bottomright'});
 
                 legend.onAdd = function (map) {
 
                     var div = L.DomUtil.create('div', 'info legend'),
-                        grades = [0, 10, 20, 40, 70, 100, 150, 200, 300, 400],
+                        grades = [0, 5, 10, 20, 40, 70, 100, 150, 200, 300, 400, 600, 1000],
                         labels = ["<strong> Einwohner pro km² </strong>"], from, to;
+
+
 
                     for (var i = 0; i < grades.length; i++) {
                         from = grades[i];
@@ -202,6 +150,7 @@
                             '<i style="background:' + getColor(from + 1) + '"></i> ' +
                             from + (to ? '&ndash;' + to : '+'));
                     }
+                    labels.push('<i style="background:' + getColor(grades[0]) + '"></i> ' + 'n/a');
                     div.innerHTML = labels.join('<br>');
                     return div;
 
@@ -209,11 +158,11 @@
                 };
                 legend.addTo(map);
 
-            })
-        ;
+            });
 
     }
 </script>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 <script
         src="https://code.jquery.com/jquery-3.3.1.min.js"
         integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
