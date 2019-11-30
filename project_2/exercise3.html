@@ -2,12 +2,12 @@
 <html>
 
 <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <value>Leaflet</value>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-          integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-          crossorigin=""/>
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin="" />
     <style>
         html,
         body {
@@ -29,247 +29,266 @@
 </head>
 
 <body onload="initialize()">
-<div id="map_canvas"></div>
-<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+    <div id="map_canvas"></div>
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
         integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
         crossorigin=""></script>
-<script type="text/javascript" src="states-data.js"></script>
-<script>
-    var map;
-    const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
-    const geocodeParams = '&format=json&limit=1';
-    var drop0 = L.icon({
-      iconUrl: 'images/drop0.png',
-      iconSize: [20, 35], // size of the icon
-      iconAnchor: [20, 30],
-      popupAnchor: [0, -32]
-    });
-    var areaCodes = [
-        "112", // Belarus
-        "100", // Bulgaria
-        "203", // Czechia
-        "348", // Hungary
-        "498", // Moldova
-        "616", // Poland
-        "642", // Romania
-        "643", // Russia
-        "703", // Slovakia
-        "804", // Ukraine
-        "208", // Denmark
-        "233", // Estonia
-        "234", // Faroe Island
-        "246", // Finland
-        "352", // Iceland
-        "372", // Ireland
-        "833", // Isle of Man
-        "428", // Latvia
-        "440", // Lithuania
-        "578", // Norway
-        "752", // Sweden
-        "826", // UK
-        "008", // Albania
-        "020", // Andorra
-        "070", // Bosnia
-        "191", // Croatia
-        "292", // Gibraltar
-        "300", // Greece
-        "380", // Italy
-        "807", // Macedonia
-        "470", // Malta
-        "499", // Montenegro
-        "620", // Portugal
-        "674", // San Marino
-        "688", // Serbia
-        "705", // Slovenia
-        "040", // Austria
-        "056", // Belgium
-        "250", // France
-        "276", // Germany
-        "438", // Liechtenstein
-        "442", // Luxembourg
-        "492", // Monaco
-        "528", // Netherlands
-        "756", // Switzerland
-        "724", // Spain
-    ];
+    <script type="text/javascript" src="states-data.js"></script>
+    <script>
+        var map;
+        const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
+        const geocodeParams = '&format=json&limit=1';
+        var drop0 = L.icon({
+            iconUrl: 'images/drop0.png',
+            iconSize: [20, 35], // size of the icon
+            iconAnchor: [20, 30],
+            popupAnchor: [0, -32]
+        });
+        var areaCodes = [
+            "112", // Belarus
+            "100", // Bulgaria
+            "203", // Czechia
+            "348", // Hungary
+            "498", // Moldova
+            "616", // Poland
+            "642", // Romania
+            "643", // Russia
+            "703", // Slovakia
+            "804", // Ukraine
+            "208", // Denmark
+            "233", // Estonia
+            "234", // Faroe Island
+            "246", // Finland
+            "352", // Iceland
+            "372", // Ireland
+            "833", // Isle of Man
+            "428", // Latvia
+            "440", // Lithuania
+            "578", // Norway
+            "752", // Sweden
+            "826", // UK
+            "008", // Albania
+            "020", // Andorra
+            "070", // Bosnia
+            "191", // Croatia
+            "292", // Gibraltar
+            "300", // Greece
+            "380", // Italy
+            "807", // Macedonia
+            "470", // Malta
+            "499", // Montenegro
+            "620", // Portugal
+            "674", // San Marino
+            "688", // Serbia
+            "705", // Slovenia
+            "040", // Austria
+            "056", // Belgium
+            "250", // France
+            "276", // Germany
+            "438", // Liechtenstein
+            "442", // Luxembourg
+            "492", // Monaco
+            "528", // Netherlands
+            "756", // Switzerland
+            "724", // Spain
+        ];
 
-    var timePeriods = [
-        "2015",
-        "2016",
-        "2017"
-    ]
+        var timePeriods = [
+            "2015",
+            "2016",
+            "2017"
+        ]
 
-    function GetTimePeriods() {
-        result = "";
-        timePeriods.forEach(element => {
-            result += ("&timePeriod=" + element);
-        })
-        return result;
-    }
-
-    function GetAreaCodes() {
-        result = "";
-        areaCodes.forEach(element => {
-            result += ("&areaCode=" + element);
-        })
-        return result;
-    }
-
-    function loadJSON(callback) {
-        let request = new XMLHttpRequest();
-        request.overrideMimeType("application/json");
-        //request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaCode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-        //Europe: request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=150&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-        // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=' +
-        //     '100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&' +
-        //     'areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=' +
-        //     '744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=' +
-        //     '380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaC' +
-        //     'ode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod' +
-        //     '=2016&timePeriod=2017&pageSize=829', true);
-        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + '&pageSize=829', true);
-        request.onreadystatechange = function () {
-            if (request.readyState == 4 && request.status == "200") {
-                callback(request.responseText);
-            }
-        };
-        request.send(null);
-    }
-
-    function DataObject(country, indicator, year, value) {
-        this.country = country;
-        this.indicator = indicator;
-        this.year = year;
-        this.value = value;
-    }
-
-    function YearObject(year) {
-        this.year = year;
-        this.water = [];
-        this.soap = [];
-    }
-
-    let objects = [];
-
-
-
-    function initialize() {
-        loadJSON(function (response) {
-            let json = JSON.parse(response);
-            json.data.forEach(element => {
-                objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
-            });
-            let data_2015 = new YearObject("2015");
-            let data_2016 = new YearObject("2016");
-            let data_2017 = new YearObject("2017");
-
-            objects.forEach(element => {
-                if (element.year == "2015") {
-                    if (element.indicator == "6.1.1") {
-                        data_2015.water.push(element);
-                    } else {
-                        data_2015.soap.push(element);
-                    }
-                } else if (element.year == "2016") {
-                    if (element.indicator == "6.1.1") {
-                        data_2016.water.push(element);
-                    } else {
-                        data_2016.soap.push(element);
-                    }
-                } else {
-                    if (element.indicator == "6.1.1") {
-                        data_2017.water.push(element);
-                    } else {
-                        data_2017.soap.push(element);
-                    }
-                }
-            });
-            console.log(data_2015);
-            
-            data_2015.water.forEach(element => {
-                geocode(element);
+        function GetTimePeriods() {
+            result = "";
+            timePeriods.forEach(element => {
+                result += ("&timePeriod=" + element);
             })
-        });
-
-        map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
-
-        var osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-            minZoom: 2,
-            maxZoom: 18
-        });
-        map.addLayer(osm);
-        /**
-         * place marker with balloon
-         * and user defines Icon
-         *
-         */
-
-    }
-
-    let layerGroup = L.layerGroup();
-
-    function geocode(object) {
-      var encoded = encodeURI([geocodeUrl, object.country, geocodeParams].join(''));
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", encoded, true);
-      xhr.responseType = 'json';
-      xhr.onload = function () {
-        if (xhr.response.length == 0) {
-          alert("No place found");
-          return;
+            return result;
         }
-        let place = xhr.response[0];
-        let marker = checkPercentage(place, object.value);
-        if (marker !== undefined) {
-          marker.addTo(layerGroup);
-          marker.bindPopup(object.country + ": " + object.value + " in " + object.year);
-        }
-        layerGroup.addTo(map);
-      };
-      xhr.onerror = function () {
-        console.error(xhr.statusText);
-      };
-      xhr.send();
-    }
 
-    function checkPercentage(place, value) {
-      if (value >= 0 && value < 10) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 10 && value < 20) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 20 && value < 30) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 30 && value < 40) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 40 && value < 50) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 50 && value < 60) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 60 && value < 70) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 70 && value < 80) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 80 && value < 90) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value >= 90 && value < 100) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      } else if (value == 100) {
-        return L.marker([place.lat, place.lon],
-          { icon: drop0 });
-      }
-    }
-</script>
+        function GetAreaCodes() {
+            result = "";
+            areaCodes.forEach(element => {
+                result += ("&areaCode=" + element);
+            })
+            return result;
+        }
+
+        function loadJSON(callback) {
+            let request = new XMLHttpRequest();
+            request.overrideMimeType("application/json");
+            //request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaCode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
+            //Europe: request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=150&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
+            // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=' +
+            //     '100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&' +
+            //     'areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=' +
+            //     '744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=' +
+            //     '380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaC' +
+            //     'ode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod' +
+            //     '=2016&timePeriod=2017&pageSize=829', true);
+            request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + '&pageSize=829', true);
+            request.onreadystatechange = function () {
+                if (request.readyState == 4 && request.status == "200") {
+                    callback(request.responseText);
+                }
+            };
+            request.send(null);
+        }
+
+        function DataObject(country, indicator, year, value) {
+            this.country = country;
+            this.indicator = indicator;
+            this.year = year;
+            this.value = value;
+        }
+
+        function YearObject(year) {
+            this.year = year;
+            this.water = [];
+            this.soap = [];
+        }
+
+        let objects = [];
+
+
+
+        /*function initialize() {
+            loadJSON(function (response) {
+                let json = JSON.parse(response);
+                json.data.forEach(element => {
+                    objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
+                });
+                let data_2015 = new YearObject("2015");
+                let data_2016 = new YearObject("2016");
+                let data_2017 = new YearObject("2017");
+
+                objects.forEach(element => {
+                    if (element.year == "2015") {
+                        if (element.indicator == "6.1.1") {
+                            data_2015.water.push(element);
+                        } else {
+                            data_2015.soap.push(element);
+                        }
+                    } else if (element.year == "2016") {
+                        if (element.indicator == "6.1.1") {
+                            data_2016.water.push(element);
+                        } else {
+                            data_2016.soap.push(element);
+                        }
+                    } else {
+                        if (element.indicator == "6.1.1") {
+                            data_2017.water.push(element);
+                        } else {
+                            data_2017.soap.push(element);
+                        }
+                    }
+                });
+                console.log(data_2015);
+
+                data_2015.water.forEach(element => {
+                    geocode(element);
+                })
+            });
+
+            map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
+
+            var osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+                minZoom: 2,
+                maxZoom: 18
+            });
+            L.geoJson(statesData).addTo(map);
+            map.addLayer(osm);
+            /**
+             * place marker with balloon
+             * and user defines Icon
+             *
+             * /
+
+        }*/
+
+        // color grading
+        function getColor(density) {
+            return density > 700 ? '#330000' :
+                density > 500 ? '#4d0000' :
+                    density > 300 ? '#800000' :
+                        density > 200 ? '#990000' :
+                            density > 100 ? '#b30000' :
+                                density > 70 ? '#e60000' :
+                                    density > 50 ? '#ff4d4d' :
+                                        density > 20 ? '#ff8080' :
+                                            density > 10 ? '#ff9999' :
+                                                density > 5 ? '#ffcccc' :
+                                                    density > 0 ? '#ffe6e6' :
+                                                        '#cccccc';
+        }
+
+
+        // define polygon style
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.POP_ADMIN / feature.properties.SQKM),
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '1',
+                fillOpacity: 0.7
+            };
+        }
+
+        // define functionality for every geoJson feature
+        function onEachFeature(feature, layer) {
+            //calculate Population Density
+            var popDensity = Math.round((feature.properties.POP_ADMIN / feature.properties.SQKM) * 100) / 100;
+
+            //add Pop-up with Population Density
+            if (popDensity >= 0) {
+                let out = "<b>" + feature.properties.ADMIN_NAME + ", " + feature.properties.CNTRY_NAME + "</b><br>" + popDensity + " Einwohner/km&sup2";
+                layer.bindPopup(out);
+            } else {
+                let out = "<b>Keine Daten</b><br>";
+                layer.bindPopup(out);
+            }
+        }
+
+        // call on load
+        function initialize() {
+
+            // initialize map
+            let map = L.map('map_canvas').setView([48.75, 9.21], 7);
+
+            // add humanitarian tile layer to map
+            let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            }).addTo(map);
+
+            // read shapefile
+            var shapefile = 'files/World/Cntry00';
+
+            // parse shapefile to geoJson
+            shp(shapefile).then(function (data) {
+                // add geoJson Layer and add to map
+
+                if (data.FIRST_FIRS == "Europe") {
+                    console.log(element)
+                }
+
+                console.log(data)
+                var geo = L.geoJson(data, { style: style, onEachFeature: onEachFeature }).addTo(map);
+
+                // define Layers
+                let baseMaps = { "BaseLayer": osm };
+                let overlays = { "PopDensity": geo };
+
+                // add control for Layers
+                L.control.layers(baseMaps, overlays).addTo(map);
+            });
+
+
+        }
+
+    </script>
 </body>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"> </script>
 
 </html>
