@@ -101,16 +101,16 @@
 
         function GetTimePeriods() {
             result = "";
-            timePeriods.forEach(element => {
-                result += ("&timePeriod=" + element);
+            timePeriods.forEach(country => {
+                result += ("&timePeriod=" + country);
             })
             return result;
         }
 
         function GetAreaCodes() {
             result = "";
-            areaCodes.forEach(element => {
-                result += ("&areaCode=" + element);
+            areaCodes.forEach(country => {
+                result += ("&areaCode=" + country);
             })
             return result;
         }
@@ -136,10 +136,11 @@
             request.send(null);
         }
 
-        function DataObject(country, indicator, year, value) {
+        function DataObject(country, indicator, year, series, value) {
             this.country = country;
             this.indicator = indicator;
             this.year = year;
+            this.series = series;
             this.value = value;
         }
 
@@ -156,38 +157,38 @@
         /*function initialize() {
             loadJSON(function (response) {
                 let json = JSON.parse(response);
-                json.data.forEach(element => {
-                    objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
+                json.data.forEach(country => {
+                    objects.push(new DataObject(country.geoAreaName, country.indicator, country.timePeriodStart, country.series, country.value,))
                 });
                 let data_2015 = new YearObject("2015");
                 let data_2016 = new YearObject("2016");
                 let data_2017 = new YearObject("2017");
 
-                objects.forEach(element => {
-                    if (element.year == "2015") {
-                        if (element.indicator == "6.1.1") {
-                            data_2015.water.push(element);
+                objects.forEach(country => {
+                    if (country.year == "2015") {
+                        if (country.indicator == "6.1.1") {
+                            data_2015.water.push(country);
                         } else {
-                            data_2015.soap.push(element);
+                            data_2015.soap.push(country);
                         }
-                    } else if (element.year == "2016") {
-                        if (element.indicator == "6.1.1") {
-                            data_2016.water.push(element);
+                    } else if (country.year == "2016") {
+                        if (country.indicator == "6.1.1") {
+                            data_2016.water.push(country);
                         } else {
-                            data_2016.soap.push(element);
+                            data_2016.soap.push(country);
                         }
                     } else {
-                        if (element.indicator == "6.1.1") {
-                            data_2017.water.push(element);
+                        if (country.indicator == "6.1.1") {
+                            data_2017.water.push(country);
                         } else {
-                            data_2017.soap.push(element);
+                            data_2017.soap.push(country);
                         }
                     }
                 });
                 console.log(data_2015);
 
-                data_2015.water.forEach(element => {
-                    geocode(element);
+                data_2015.water.forEach(country => {
+                    geocode(country);
                 })
             });
 
@@ -252,6 +253,8 @@
             }
         }
 
+        
+
         // call on load
         function initialize() {
 
@@ -268,13 +271,16 @@
             // parse shapefile to geoJson
             shp(shapefile).then(function (data) {
                 // add geoJson Layer and add to map
-
-                if (data.FIRST_FIRS == "Europe") {
-                    console.log(element)
-                }
-
+                let europe = [];
+                data.features.forEach(country => {
+                    if (country.properties.FIRST_FIRS == "Europe") {
+                        europe.push(country);
+                    }
+                });
+                console.log(europe);
+                
                 console.log(data)
-                var geo = L.geoJson(data, { style: style, onEachFeature: onEachFeature }).addTo(map);
+                var geo = L.geoJson(europe, { style: style, onEachFeature: onEachFeature }).addTo(map);
 
                 // define Layers
                 let baseMaps = { "BaseLayer": osm };
