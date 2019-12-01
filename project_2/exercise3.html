@@ -43,7 +43,7 @@
 
     function GetDrops(path) {
         for (i = 0; i <= 10; i++) {
-            let factor = (10 + i) / 10 - 1;
+            let factor = (10 + 10-i) / 10;
             drop_icons[i] = L.icon({
                 iconUrl: path + '/drop' + (i * 10) + '.png',
                 iconSize: [20 * factor, 35 * factor], // size of the icon
@@ -129,18 +129,10 @@
     function loadJSON(callback) {
         let request = new XMLHttpRequest();
         request.overrideMimeType("application/json");
-        //request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaCode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-        //Europe: request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=150&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-        // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=' +
-        //     '100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&' +
-        //     'areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=' +
-        //     '744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=' +
-        //     '380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaC' +
-        //     'ode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod' +
-        //     '=2016&timePeriod=2017&pageSize=829', true);
-        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + '&pageSize=829', true);
+        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods()+"&pageSize=829", true);
         request.onreadystatechange = function () {
             if (request.readyState == 4 && request.status == "200") {
+                console.log(request.responseText);
                 callback(request.responseText);
             }
         };
