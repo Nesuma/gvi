@@ -318,13 +318,21 @@
 
                 
                console.log(data_2015.water);
+               
                 data_2015.water.forEach(country =>  {
                     europe.forEach(input => {
                         //console.log(input);
+                        //match countries
                         if(input.properties.CNTRY_NAME == country.country) {
                             input.data = country;
-                        } else if (country.country == "United Kingdom of Great Britain and Northern Ireland"
-                            && input.properties.CNTRY_NAME == "United Kingdom") {
+                        } else if (country.country.includes(input.properties.CNTRY_NAME)
+                        || input.properties.CNTRY_NAME.includes(country.country)) {
+                            input.data = country;
+                        } else if (input.properties.CNTRY_NAME == "Bosnia & Herzegovina"
+                        && country.country == "Bosnia and Herzegovina") {
+                            input.data = country;
+                        } else if (input.properties.CNTRY_NAME == "Czech Republic"
+                        && country.country == "Czechia") {
                             input.data = country;
                         }
                     });
