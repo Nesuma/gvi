@@ -5,6 +5,8 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <value>Leaflet</value>
+    <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+    <link rel="stylesheet" type="text/css" href="//cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
         integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
         crossorigin="" />
@@ -26,38 +28,38 @@
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.12.0/jquery-ui.js"
+        integrity="sha256-0YPKAwZP7Mp3ALMRVB2i8GXeEndvCq3eSl/WsAl1Ryk=" crossorigin="anonymous"></script>
+
 </head>
+
 
 <body onload="initialize()">
 
     <div id="map_canvas"></div>
-    <div id="checkbox_container">
+    <!-- <div id="checkbox_container">
         <form>
             <p>Jahr:</p>
-            <fieldset onchange="update()"">
-                <input type="radio" id="2015" name="answer" value="2015" checked>
+            <fieldset>
+                <input type="radio" id="2015" name="answer" value="2015" onchange="update()" checked>
                 <label for="2015"> 2015</label>
-                <input type="radio" id="2016" name="answer" value="2016">
+                <input type="radio" id="2016" name="answer" value="2016" onchange="update()">
                 <label for="2016"> 2016</label>
-                <input type="radio" id="2017" name="answer" value="2017">
+                <input type="radio" id="2017" name="answer" value="2017" onchange="update()">
                 <label for="2017"> 2017</label>
             </fieldset>
         </form>
-    </div>
+    </div>-->
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
         integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
         crossorigin=""></script>
+    <script src="SliderControl.js"></script>
+
     <script type="text/javascript" src="states-data.js"></script>
     <script>
         var map;
         const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
         const geocodeParams = '&format=json&limit=1';
-        var drop0 = L.icon({
-            iconUrl: 'images/drop0.png',
-            iconSize: [20, 35], // size of the icon
-            iconAnchor: [20, 30],
-            popupAnchor: [0, -32]
-        });
         var areaCodes = [
             "112", // Belarus
             "100", // Bulgaria
@@ -134,15 +136,6 @@
         function loadJSON(callback) {
             let request = new XMLHttpRequest();
             request.overrideMimeType("application/json");
-            //request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaCode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-            //Europe: request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=150&timePeriod=2015&timePeriod=2016&timePeriod=2017', true);
-            // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=112&areaCode=' +
-            //     '100&areaCode=203&areaCode=348&areaCode=616&areaCode=498&areaCode=642&areaCode=643&areaCode=703&areaCode=804&areaCode=208&' +
-            //     'areaCode=233&areaCode=234&areaCode=246&areaCode=352&areaCode=372&areaCode=833&areaCode=428&areaCode=440&areaCode=578&areaCode=' +
-            //     '744&areaCode=752&areaCode=826&areaCode=8&areaCode=20&areaCode=70&areaCode=191&areaCode=292&areaCode=300&areaCode=336&areaCode=' +
-            //     '380&areaCode=470&areaCode=499&areaCode=807&areaCode=620&areaCode=674&areaCode=688&areaCode=705&areaCode=724&areaCode=40&areaC' +
-            //     'ode=56&areaCode=250&areaCode=276&areaCode=438&areaCode=442&areaCode=492&areaCode=528&areaCode=756&timePeriod=2015&timePeriod' +
-            //     '=2016&timePeriod=2017&pageSize=829', true);
             request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + '&pageSize=829', true);
             request.onreadystatechange = function () {
                 if (request.readyState == 4 && request.status == "200") {
@@ -170,63 +163,6 @@
 
         let objects = [];
 
-
-
-        /*function initialize() {
-            loadJSON(function (response) {
-                let json = JSON.parse(response);
-                json.data.forEach(country => {
-                    objects.push(new DataObject(country.geoAreaName, country.indicator, country.timePeriodStart, country.series, country.value,))
-                });
-                let data_2015 = new YearObject("2015");
-                let data_2016 = new YearObject("2016");
-                let data_2017 = new YearObject("2017");
-
-                objects.forEach(country => {
-                    if (country.year == "2015") {
-                        if (country.indicator == "6.1.1") {
-                            data_2015.water.push(country);
-                        } else {
-                            data_2015.soap.push(country);
-                        }
-                    } else if (country.year == "2016") {
-                        if (country.indicator == "6.1.1") {
-                            data_2016.water.push(country);
-                        } else {
-                            data_2016.soap.push(country);
-                        }
-                    } else {
-                        if (country.indicator == "6.1.1") {
-                            data_2017.water.push(country);
-                        } else {
-                            data_2017.soap.push(country);
-                        }
-                    }
-                });
-                console.log(data_2015);
-
-                data_2015.water.forEach(country => {
-                    geocode(country);
-                })
-            });
-
-            map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
-
-            var osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-                minZoom: 2,
-                maxZoom: 18
-            });
-            L.geoJson(statesData).addTo(map);
-            map.addLayer(osm);
-            /**
-             * place marker with balloon
-             * and user defines Icon
-             *
-             * /
-
-        }*/
-
         function getColor(density) {
             return density > 1000 ? '#00001a' :
                 density > 600 ? '#000033' :
@@ -244,34 +180,30 @@
                                                                 '#dddddd';
         }
 
-        function update() {
-            var geo = L.geoJson(europe, { style: style, onEachFeature: onEachFeature }).addTo(map);
-        }
-        // define polygon style
-        function style(feature) {
-            console.log(feature);
-            let data = getData(feature);
+        function style(feature, year) {
+            //console.log(feature);
+            //console.log(year);
+            let data = getData(feature, year);
             if (data == undefined) {
                 return;
             }
+            console.log(data);
+
             return {
                 fillColor: getColor(data.value),
                 weight: 1,
                 opacity: 1,
                 color: 'white',
                 dashArray: '1',
-                fillOpacity: 0.7
+                fillOpacity: 0.8
             };
         }
 
-        function getData(feature) {
+        function getData(feature, year) {
             let data;
-            let year_2015 = document.getElementById("2015").checked;
-            let year_2016 = document.getElementById("2016").checked;
-            let year_2017 = document.getElementById("2017").checked;
-            if (year_2015 == true) {
+            if (year == "2015") {
                 data = feature.data_2015;
-            } else if (year_2016 == true) {
+            } else if (year == "2016") {
                 data = feature.data_2016;
             } else {
                 data = feature.data_2017;
@@ -279,22 +211,20 @@
             return data;
         }
 
+
         // define functionality for every geoJson feature
-        function onEachFeature(feature, layer) {
+        function onEachFeature(feature, layer, year) {
             //calculate Population Density
-            let popDensity = 0
-            if (feature.data != undefined) {
-                popDensity = feature.data.value;
+            let value = getData(feature, year);
+            if (value == undefined) {
+                value = 0;
             }
             //console.log(feature);
 
-            //add Pop-up with Population Density
-            if (popDensity >= 0) {
-                let out = "<b>" + feature.properties.ADMIN_NAME + ", " + feature.properties.CNTRY_NAME + "</b><br>" + popDensity + " Zugang zu Seife";
-                layer.bindPopup(out);
+            if (value >= 0) {
+                layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br>" + value + "%");
             } else {
-                let out = "<b>Keine Daten</b><br>";
-                layer.bindPopup(out);
+                layer.bindPopup("<b>Kein Wert vorhanden</b><br>");
             }
         }
         let europe = [];
@@ -304,7 +234,7 @@
         function initialize() {
 
             // initialize map
-            let map = L.map('map_canvas').setView([48.75, 9.21], 7);
+            let map = L.map('map_canvas').setView([55, 10], 4);
 
             let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
             }).addTo(map);
@@ -365,22 +295,46 @@
                     input.data_2015 = data_2015.water.get(input.properties.CNTRY_NAME);
                     input.data_2016 = data_2016.water.get(input.properties.CNTRY_NAME);
                     input.data_2017 = data_2017.water.get(input.properties.CNTRY_NAME);
-                })
+                });
+
                 console.log(europe);
 
                 //Möglichkeiten: 1. Vergleich Countries, 2. Während shape 
-                var geo = L.geoJson(europe, { style: style, onEachFeature: onEachFeature }).addTo(map);
+                let europeData2015 = L.geoJson(europe, {
+                    style: function (feature) { return style(feature, "2015") },
+                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2015") }, 
+                    time: "2015"
+                }).addTo(map);
+                let europeData2016 = L.geoJson(europe, {
+                    style: function (feature) { return style(feature, "2016") },
+                    onEachFeature: function (feature, layer) { return style(feature, layer, "2015") }, 
+                    time: "2016"
+                }).addTo(map);
+                let europeData2017 = L.geoJson(europe, {
+                    style: function (feature) { return style(feature, "2017") },
+                    onEachFeature: function (feature) { return style(feature, "2015") }, 
+                    time: "2017"
+                }).addTo(map);
 
-                let baseMaps = { "BaseLayer": osm };
-                let overlays = { "PopDensity": geo };
+                //now add each geojson layer to a single layer group, as the slider take only one layer
+                var layerGroup = L.layerGroup([europeData2015, europeData2016, europeData2017]);
 
-                L.control.layers(baseMaps, overlays).addTo(map);
+                //initiate slider, follow = 1 means, show one feature at a time
+                var sliderControl = L.control.sliderControl({ layer: layerGroup, follow: 1 });
+                map.addControl(sliderControl);//add slider to map
+                sliderControl.startSlider();
+
+
+
+
 
             });
 
 
 
         }
+
+
 
         function sortToIssue(country, data) {
             if (country.indicator == "6.1.1") {
