@@ -117,7 +117,7 @@
         shp("files/World/Cntry00")
             .then(countries => {
                 // administrations = csvJSON(data);
-                european_countries = getEuropeanCountries(countries, new Map([["Europe", 1]]));
+                european_countries = getEuropeanCountries(countries);
 
                 console.log(european_countries);
 
