@@ -195,7 +195,7 @@
                 opacity: 1,
                 color: 'white',
                 dashArray: '1',
-                fillOpacity: 0.8
+                fillOpacity: 0.7
             };
         }
 
@@ -215,14 +215,16 @@
         // define functionality for every geoJson feature
         function onEachFeature(feature, layer, year) {
             //calculate Population Density
-            let value = getData(feature, year);
-            if (value == undefined) {
-                value = 0;
+            let data = getData(feature, year);
+            console.log(data);
+
+            if (data == undefined) {
+                data = 0;
             }
             //console.log(feature);
 
-            if (value >= 0) {
-                layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br>" + value + "%");
+            if (data.value >= 0) {
+                layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br>" + data.value + "%");
             } else {
                 layer.bindPopup("<b>Kein Wert vorhanden</b><br>");
             }
@@ -302,17 +304,17 @@
                 //Möglichkeiten: 1. Vergleich Countries, 2. Während shape 
                 let europeData2015 = L.geoJson(europe, {
                     style: function (feature) { return style(feature, "2015") },
-                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2015") }, 
+                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2015") },
                     time: "2015"
                 }).addTo(map);
                 let europeData2016 = L.geoJson(europe, {
                     style: function (feature) { return style(feature, "2016") },
-                    onEachFeature: function (feature, layer) { return style(feature, layer, "2015") }, 
+                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2016") },
                     time: "2016"
                 }).addTo(map);
                 let europeData2017 = L.geoJson(europe, {
                     style: function (feature) { return style(feature, "2017") },
-                    onEachFeature: function (feature) { return style(feature, "2015") }, 
+                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2017") },
                     time: "2017"
                 }).addTo(map);
 
