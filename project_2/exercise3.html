@@ -55,6 +55,69 @@
 
     }
 
+    var country_code_mapping = new Map([
+        [ "Belarus","112"],
+        [ "Bulgaria","100"],
+        [ "Czechia","203"],
+        [ "Czech Republic","203"],
+        [ "Hungary","348"],
+        [ "Moldova","498"],
+        [ "Poland","616"],
+        [ "Romania","642"],
+        [ "Russia","643"],
+        [ "Slovakia","703"],
+        [ "Ukraine","804"],
+        [ "Denmark","208"],
+        [ "Estonia","233"],
+        [ "Faroe Island","234"],
+        [ "Faroe Is.","234"],
+        [ "Finland","246"],
+        [ "Iceland","352"],
+        [ "Ireland","372"],
+        [ "Isle of Man","833"],
+        [ "Latvia","428"],
+        [ "Lithuania","440"],
+        [ "Norway","578"],
+        [ "Sweden","752"],
+        [ "United Kingdom","826"],
+        [ "Albania","008"],
+        [ "Andorra","020"],
+        [ "Bosnia and Herzegovina","070"],
+        [ "Bosnia & Herzegovina","070"],
+        [ "Croatia","191"],
+        [ "Gibraltar","292"],
+        [ "Greece","300"],
+        [ "Italy","380"],
+        [ "Macedonia","807"],
+        [ "Malta","470"],
+        [ "Montenegro","499"],
+        [ "Portugal","620"],
+        [ "San Marino","674"],
+        [ "Serbia and Montenegro","688"],
+        [ "Serbia & Montenegro","688"],
+        [ "Slovenia","705"],
+        [ "Austria","040"],
+        [ "Belgium","056"],
+        [ "France","250"],
+        [ "Germany","276"],
+        [ "Liechtenstein","438"],
+        [ "Luxembourg","442"],
+        [ "Monaco","492"],
+        [ "Netherlands","528"],
+        [ "Switzerland","756"],
+        [ "Spain","724"],
+        ["Svalbard and Jan Mayen Islands","744"],
+        ["Svalbard","744"],
+        ["Jan Mayen","744"],
+        ["Guernsey"	,"831"],
+        ["Jersey","832"],
+        ["Sark","680"],
+        ["Holy See","336"],
+        ["Vatican City","336"],
+        ["Vatican","336"]
+
+    ]);
+
     var areaCodes = [
         "112", // Belarus
         "100", // Bulgaria
@@ -126,13 +189,13 @@
         return result;
     }
 
-    function loadJSON(callback) {
+    function loadJSON(code,year,callback) {
         let request = new XMLHttpRequest();
         request.overrideMimeType("application/json");
-        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods()+"&pageSize=829", true);
+        // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=' + code + "&timePeriod=" + year + '&dimensions=[{Location:"ALLAREA"}]', true);
+        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=' + code + "&timePeriod=" + year, true);
         request.onreadystatechange = function () {
             if (request.readyState == 4 && request.status == "200") {
-                console.log(request.responseText);
                 callback(request.responseText);
             }
         };
@@ -154,98 +217,191 @@
 
     let objects = [];
 
+    function getEuropeanCountries(json) {
+        let features = [];
+        for (let i = 0; i < json.features.length; i++) {
+            if (json.features[i].properties.FIRST_FIRS === "Europe") {
+                features.push(json.features[i]);
+            }
+        }
+        json.features = features;
+        return json;
+    }
+
+    function l(i){
+            console.log(i);
+    }
 
     function initialize() {
         GetDrops("images");
-        loadJSON(function (response) {
-            let json = JSON.parse(response);
-            json.data.forEach(element => {
-                objects.push(new DataObject(element.geoAreaName, element.indicator, element.timePeriodStart, element.value))
-            });
-            let data_2015 = new YearObject("2015");
-            let data_2016 = new YearObject("2016");
-            let data_2017 = new YearObject("2017");
-
-            objects.forEach(element => {
-                if (element.year == "2015") {
-                    if (element.indicator == "6.1.1") {
-                        data_2015.water.set(element.country, element.value)
-                    } else {
-                        data_2015.soap.set(element.country, element.value)
-                    }
-                } else if (element.year == "2016") {
-                    if (element.indicator == "6.1.1") {
-                        data_2016.water.set(element.country, element.value);
-                    } else {
-                        data_2016.soap.set(element.country, element.value);
-                    }
-                } else {
-                    if (element.indicator == "6.1.1") {
-                        data_2017.water.set(element.country, element.value);
-                    } else {
-                        data_2017.soap.set(element.country, element.value);
-                    }
-                }
-            });
-            console.log(data_2015);
-
-            setIcons(data_2015.water);
-
-            //L.geoJson(statesData, {style: style}).addTo(map);
-
-        });
 
         map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
 
-        var osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        let osm = new L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
             minZoom: 2,
             maxZoom: 18
-        });
-        map.addLayer(osm);
-        /**
-         * place marker with balloon
-         * and user defines Icon
-         *
-         */
+        }).addTo(map);
 
+        shp("files/World/Cntry00").then(countries => {
+
+            // console.log(countries);
+
+            let european_countries = getEuropeanCountries(countries);
+            // console.log(european_countries);
+
+            for (let i = 0; i < european_countries.features.length; i++){
+                let country = european_countries.features[i];
+                country_name = country.properties.CNTRY_NAME;
+                country_code = country_code_mapping.get(country_name);
+                //l("country name = " + country_name + " code = " + country_code);
+
+
+                timePeriods.forEach(year =>  {
+                    loadJSON(country_code,year,function(response){
+                        let json = JSON.parse(response);
+
+                        let attributes = {
+                            SH_H2O_SAFE : 0,
+                            SH_SAN_SAFE : 0,
+                            SH_SAN_HNDWSH : 0
+                        };
+
+                        // l(json);
+
+                        json.data.forEach(entry => {
+                            if (entry.dimensions.Location === "ALLAREA") {
+                                attributes[entry.series] = parseFloat(entry.value);
+
+                                country.properties["year_" + year.toString()] = attributes;
+                            }
+                        });
+                        let safe_water = L.geoJson(european_countries, {style:styleSafeWater});
+                        let safe_sanitation = L.geoJson(european_countries, {style:styleSafeSanitation});
+                        let soap_sanitation = L.geoJson(european_countries, {style:styleSoap});
+
+                        let background = {"Clear map" : osm};
+                        let foreground = {"Safe and affordable drinking water": safe_water, "Safely managed sanitation" : safe_sanitation, "Handwashing facilities" : soap_sanitation};
+
+                        L.control.layers(background,foreground).addTo(map);
+                    });
+                });
+                return;
+            }
+
+
+
+            console.log(european_countries);
+
+            //     setIcons(data_2015.water);
+
+        });
+
+        // legend.onAdd = function (map) {
+        //
+        //     var div = L.DomUtil.create('div', 'info legend'),
+        //         grades = [0, 5, 10, 20, 40, 70, 100, 150, 200, 300, 400, 600, 1000],
+        //         labels = ["<strong> Einwohner pro km² </strong>"], from, to;
+        //
+        //
+        //
+        //     for (var i = 0; i < grades.length; i++) {
+        //         from = grades[i];
+        //         to = grades[i + 1];
+        //
+        //         labels.push(
+        //             '<i style="background:' + getColor(from + 1) + '"></i> ' +
+        //             from + (to ? '&ndash;' + to : '+'));
+        //     }
+        //     labels.push('<i style="background:' + getColor(grades[0]) + '"></i> ' + 'n/a');
+        //     div.innerHTML = labels.join('<br>');
+        //     return div;
+        //
+        //
+        // };
+        // legend.addTo(map);
     }
 
     let layerGroup = L.layerGroup();
 
+    function getColorWater(percentage) {
+        return percentage > 95 ? '#001a33' :
+            percentage > 90 ? '#00264d' :
+                percentage > 80 ? '#003366' :
+                    percentage > 70 ? '#004080' :
+                        percentage > 60 ? '#004d99' :
+                            percentage > 50 ? '#0066cc' :
+                                percentage > 40 ? '#0080ff' :
+                                    percentage > 30 ? '#3399ff' :
+                                        percentage > 20 ? '#66b3ff' :
+                                            percentage > 10 ? '#99ccff':
+                                                percentage > 0 ? '#cce6ff':
+                                                    '#888888';
+    }
 
+    function getColorSanitation(percentage) {
+        return percentage > 95 ? '#001a00' :
+            percentage > 90 ? '#003300' :
+                percentage > 800 ? '#004d00' :
+                    percentage > 70 ? '#006600' :
+                        percentage > 60 ? '#008000' :
+                            percentage > 50 ? '#00cc00' :
+                                percentage > 40 ? '#00e600' :
+                                    percentage > 30 ? '#33ff33' :
+                                        percentage > 20 ? '#4dff4d' :
+                                            percentage > 10 ? '#80ff80' :
+                                                percentage > 0 ? '#b3ffb3' :
+                                                            '#888888';
+    }
 
+    function getColorHandwashing(percentage) {
+        return percentage > 95 ? '#1a000d' :
+            percentage > 90 ? '#33001a' :
+                percentage > 80 ? '#4d0026' :
+                    percentage > 70 ? '#660033' :
+                        percentage > 60 ? '#800040' :
+                            percentage > 50 ? '#b30059' :
+                                percentage > 40 ? '#e60073' :
+                                    percentage > 30 ? '#ff1a8c' :
+                                        percentage > 20 ? '#ff4da6' :
+                                            percentage > 10 ? '#ff80bf':
+                                                percentage > 0 ? '#ffb3d9':
+                                                    '#888888';
+    }
 
-    // function getColor(percentage) {
-    //     return percentage > 95 ? '#001a09' :
-    //         percentage > 90 ? '#003311' :
-    //             percentage > 85 ? '#004d1a' :
-    //                 percentage > 80 ? '#006622' :
-    //                     percentage > 75 ? '#00802b' :
-    //                         percentage > 70 ? '#00b33c' :
-    //                             percentage > 65 ? '#00e64d' :
-    //                                 percentage > 60 ? '#1aff66' :
-    //                                     percentage > 55 ? '#66ff99' :
-    //                                         '#ccffdd';
-    // }
-    //
-    // function style(feature) {
-    //     let name = feature.properties.NAME;
-    //
-    //     console.log(name);
-    //
-    //     let color = countries.has(name) ? getColor(getPercentage(name)) : '#ffffff';
-    //
-    //     return {
-    //         fillColor: color,
-    //         weight: 2,
-    //         opacity: 1,
-    //         color: 'white',
-    //         dashArray: '3',
-    //         fillOpacity: 0.8
-    //     };
-    // }
-    //
+    function styleSafeSanitation(feature) {
+        return {
+            fillColor: getColorSanitation(feature.properties.SH_SAN_SAFE),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.8
+        };
+    }
+    function styleSoap(feature) {
+        return {
+            fillColor: getColorHandwashing(feature.properties.SH_SAN_HNDWSH),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.8
+        };
+    }
+
+    function styleSafeWater(feature) {
+        l(JSON.stringify(feature.properties));
+        return {
+            fillColor: getColorWater(feature.properties.year_2015.SH_H2O_SAFE),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.8
+        };
+    }
+
     // function getPercentage(country_name) {
     //     // filters useless data
     //
@@ -333,6 +489,7 @@
         layerGroup.addTo(map);
     }
 </script>
+<script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 </body>
 
 </html>
