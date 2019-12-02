@@ -214,7 +214,7 @@
                     //slider non functional until a layer is set
                     year = this.value;
                     l("slider year: " + year.toString());
-                    
+
                     l("map is showing " + key);
                     map.removeLayer(foreground[key]);
                     control.removeLayer(foreground[key]);
@@ -276,25 +276,25 @@
                     }
                 });
 
+                let safe_water_icons = L.layerGroup();
+                addIcons(safe_water_icons,european_countries,"drop",0,"SH_H2O_SAFE");
+                let safe_sanitation_icons = L.layerGroup();
+                addIcons(safe_sanitation_icons,european_countries,"toilet",20,"SH_SAN_SAFE");
+                let soap_icons = L.layerGroup();
+                addIcons(soap_icons,european_countries,"soap",40,"SH_SAN_HNDWSH");
+
                 background = {"Clear map": osm};
                 foreground = {
                     "Safe and affordable drinking water": safe_water,
                     "Safely managed sanitation": safe_sanitation,
                     "Handwashing facilities": soap_sanitation,
-                    // "Safe and affordable drinking water icons" : safe_water_icons,
-                    // "Safely managed sanitation icons" : safe_sanitation_icons,
-                    // "Handwashing facilities icons" : soap_icons
+                    "Safe and affordable drinking water icons" : safe_water_icons,
+                    "Safely managed sanitation icons" : safe_sanitation_icons,
+                    "Handwashing facilities icons" : soap_icons
 
                 };
-                // let safe_water_icons = L.layerGroup();
-                // addIcons(safe_water_icons,european_countries,"drop",0,"SH_H2O_SAFE");
-                // let safe_sanitation_icons = L.layerGroup();
-                // addIcons(safe_sanitation_icons,european_countries,"toilet",20,"SH_SAN_SAFE");
-                // let soap_icons = L.layerGroup();
-                // addIcons(soap_icons,european_countries,"soap",40,"SH_SAN_HNDWSH");
 
                 control = L.control.layers(background, foreground).addTo(map);
-                control.collapsed = false;
             });
         });
 
@@ -381,12 +381,16 @@
     // reads the icons from local directory. Offset is used to show them next to each other
     function getIcons(path, icon_name, offset) {
         let icons = [];
-        for (i = 0; i <= 10; i++) {
-            // let factor = (10 + 10 - i) / 10;
-            let factor = 1;
-            icons[i] = L.icon({
+        icons[0] = L.icon({
+            iconUrl: path + '/' + icon_name +'_na.png',
+            iconSize: [20, 35], // size of the icon
+            iconAnchor: [20 + offset, 30],
+            popupAnchor: [offset, -32]
+        })
+        for (i = 0; i < 11; i++) {
+            icons[i+1] = L.icon({
                 iconUrl: path + '/' + icon_name + (i * 10) + '.png',
-                iconSize: [20 * factor, 35 * factor], // size of the icon
+                iconSize: [20, 35], // size of the icon
                 iconAnchor: [20 + offset, 30],
                 popupAnchor: [offset, -32]
             });
@@ -486,16 +490,17 @@
 
     // returns right icon for each percentage
     function getIcon(value, icons) {
-        return (value > 99) ? icons[10] :
-            (value >= 90) ? icons[9] :
-                (value >= 80) ? icons[8] :
-                    (value >= 70) ? icons[7] :
-                        (value >= 60) ? icons[6] :
-                            (value >= 50) ? icons[5] :
-                                (value >= 40) ? icons[4] :
-                                    (value >= 30) ? icons[3] :
-                                        (value >= 20) ? icons[2] :
-                                            (value >= 10) ? icons[1] :
+        return (value > 99) ? icons[11] :
+            (value > 90) ? icons[10] :
+                (value > 80) ? icons[9] :
+                    (value > 70) ? icons[8] :
+                        (value > 60) ? icons[7] :
+                            (value > 50) ? icons[6] :
+                                (value > 40) ? icons[5] :
+                                    (value > 30) ? icons[4] :
+                                        (value > 20) ? icons[3] :
+                                            (value > 10) ? icons[2] :
+                                                (value > 0) ? icons[1]:
                                                 icons[0];
     }
 
