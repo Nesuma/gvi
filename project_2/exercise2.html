@@ -42,37 +42,6 @@
 
 <body onload="initialize()">
   <div id="map_canvas"></div>
-  <div id="checkbox_container">
-    <fieldset>
-      <h3>Zeige Aktivitäten</h3>
-      <ul style="list-style-type:none">
-        <li>
-          <label>
-            <input type="checkbox" id="artCheck" value="art" onchange="update()" checked>
-            Kunst & Kultur
-          </label>
-        </li>
-        <li>
-          <label>
-            <input type="checkbox" id="foodCheck" value="food" onchange="update()" checked>
-            Essen & Trinken
-          </label>
-        </li>
-        <li>
-          <label>
-            <input type="checkbox" id="sleepCheck" value="checked" onchange="update()" checked>
-            Wohnen
-          </label>
-        </li>
-        <li>
-          <label>
-            <input type="checkbox" id="trainCheck" value="train" onchange="update()" checked>
-            S-Bahn Station
-          </label>
-        </li>
-      </ul>
-    </fieldset>
-  </div>
   <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
     integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
     crossorigin=""></script>
@@ -137,31 +106,35 @@
       });
       map.addLayer(osm);
       update();
+      background = { "Clear map": osm };
+      foreground = {
+        "Essen & Trinken": foodLayer,
+        "Kunst & Kultur": artLayer,
+        "Wohnen": sleepLayer,
+        "S-Bahn Station": trainLayer,
+      };
+      let control = L.control.layers(background, foreground, { collapsed: false }).addTo(map);
+      foodLayer.addTo(map);
+      artLayer.addTo(map);
+      sleepLayer.addTo(map);
+      trainLayer.addTo(map);
     }
 
     function Activity(name, address, title) {
       this.name = name;
       this.address = address;
       this.title = title;
-      geocode(name, address, title);
     }
 
-    let checkFood;
-    let checkArt;
-    let checkSleep;
-    let checkTrain;
-    let layerGroup = L.layerGroup();
+    let foodLayer = L.layerGroup();
+    let artLayer = L.layerGroup();
+    let sleepLayer = L.layerGroup();
+    let trainLayer = L.layerGroup();
 
     function update() {
-      layerGroup.clearLayers();
-      checkFood = document.getElementById("foodCheck").checked;
-      checkArt = document.getElementById("artCheck").checked;
-      checkSleep = document.getElementById("sleepCheck").checked;
-      checkTrain = document.getElementById("trainCheck").checked;
       activities.forEach(activity => {
         geocode(activity.name, activity.address, activity.title)
       });
-      layerGroup.addTo(map);
     }
 
     function geocode(name, address, title) {
@@ -177,7 +150,6 @@
         let place = xhr.response[0];
         let marker = checkActivity(place, title);
         if (marker !== undefined) {
-          marker.addTo(layerGroup);
           marker.bindPopup(name);
         }
       };
@@ -188,21 +160,20 @@
     }
 
     function checkActivity(place, title) {
-      if (title == "Essen & Trinken" && checkFood) {
+      if (title == "Essen & Trinken") {
         return L.marker([place.lat, place.lon],
-          { icon: foodIcon });
-      } else if (title == "Kunst & Kultur" && checkArt) {
+          { icon: foodIcon }).addTo(foodLayer);
+      } else if (title == "Kunst & Kultur") {
         return L.marker([place.lat, place.lon],
-          { icon: artIcon });
-      } else if (title == "Wohnen" && checkSleep) {
+          { icon: artIcon }).addTo(artLayer);
+      } else if (title == "Wohnen") {
         return L.marker([place.lat, place.lon],
-          { icon: sleepIcon });
-      } else if (title == "Station" && checkTrain) {
+          { icon: sleepIcon }).addTo(sleepLayer);
+      } else if (title == "Station") {
         return L.marker([place.lat, place.lon],
-          { icon: trainIcon });
-      } else {
-        return;
+          { icon: trainIcon }).addTo(trainLayer);
       }
+      return;
     }
     window.onload = initialize;
   </script>
