@@ -4,7 +4,6 @@
 <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-    <value>Leaflet</value>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
           integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
           crossorigin=""/>
@@ -22,7 +21,38 @@
 
         #map_canvas {
             width: 100%;
-            height: 100%;
+            height: 95%;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 25px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+        }
+
+        .slider:hover {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #4CAF50;
+            cursor: pointer;
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -30,33 +60,26 @@
 
 <body onload="initialize()">
 <div id="map_canvas"></div>
+<input type="range" min="2015" max="2017" value="2015" class="slider" id="myRange">
+<div class="slider_div">
+
+</div>
 <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
         integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
         crossorigin=""></script>
 <script type="text/javascript" src="states-data.js"></script>
 <script>
-    var map;
+    let map;
     const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
     const geocodeParams = '&format=json&limit=1';
+    let year;
+    let european_countries;
+    let foreground;
+    let background;
 
-    function getIcons(path,icon_name,offset) {
-        let icons = []
-        for (i = 0; i <= 10; i++) {
-            // let factor = (10 + 10 - i) / 10;
-            let factor = 1
-            icons[i] = L.icon({
-                iconUrl: path + '/' + icon_name + (i * 10) + '.png',
-                iconSize: [20 * factor, 35 * factor], // size of the icon
-                iconAnchor: [20+offset, 30],
-                popupAnchor: [offset, -32]
-            });
-        }
-        return icons;
-    }
+    let control;
 
-
-
-    var country_code_mapping = new Map([
+    let country_code_mapping = new Map([
         ["Belarus", "112"],
         ["Bulgaria", "100"],
         ["Czechia", "203"],
@@ -123,133 +146,17 @@
         ["Vatican", "336"]
 
     ]);
+    let attribute_mapping = new Map([
+        ["Safe and affordable drinking water", "SH_H2O_SAFE"],
+        ["Safely managed sanitation", "SH_SAN_SAFE"],
+        ["Handwashing facilities", "SH_SAN_HNDWSH"]
+    ]);
 
-    var areaCodes = [
-        "112", // Belarus
-        "100", // Bulgaria
-        "203", // Czechia
-        "348", // Hungary
-        "498", // Moldova
-        "616", // Poland
-        "642", // Romania
-        "643", // Russia
-        "703", // Slovakia
-        "804", // Ukraine
-        "208", // Denmark
-        "233", // Estonia
-        "234", // Faroe Island
-        "246", // Finland
-        "352", // Iceland
-        "372", // Ireland
-        "833", // Isle of Man
-        "428", // Latvia
-        "440", // Lithuania
-        "578", // Norway
-        "752", // Sweden
-        "826", // UK
-        "008", // Albania
-        "020", // Andorra
-        "070", // Bosnia
-        "191", // Croatia
-        "292", // Gibraltar
-        "300", // Greece
-        "380", // Italy
-        "807", // Macedonia
-        "470", // Malta
-        "499", // Montenegro
-        "620", // Portugal
-        "674", // San Marino
-        "688", // Serbia
-        "705", // Slovenia
-        "040", // Austria
-        "056", // Belgium
-        "250", // France
-        "276", // Germany
-        "438", // Liechtenstein
-        "442", // Luxembourg
-        "492", // Monaco
-        "528", // Netherlands
-        "756", // Switzerland
-        "724", // Spain
-    ];
-
-    var timePeriods = [
+    let timePeriods = [
         "2015",
         "2016",
         "2017"
     ];
-
-    function GetTimePeriods() {
-        let result = "";
-        timePeriods.forEach(element => {
-            result += ("&timePeriod=" + element);
-        });
-        return result;
-    }
-
-    function GetAreaCodes() {
-        let result = "";
-        for (const [key, value] of country_code_mapping.entries()) {
-            result += ("&areaCode=" + value);
-        }
-        return result;
-    }
-
-    function loadJSON(callback) {
-        let request = new XMLHttpRequest();
-        request.overrideMimeType("application/json");
-        // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + '&dimensions=[{Location:"ALLAREA"}]', true);
-        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + "&pageSize=1000", true);
-        // request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2&areaCode=' + code + "&timePeriod=" + year, true);
-        request.onreadystatechange = function () {
-            if (request.readyState == 4 && request.status == "200") {
-                l("Retrieved data");
-                callback(request.responseText);
-            }
-        };
-        request.send(null);
-    }
-
-    function DataObject(country, indicator, year, value) {
-        this.country = country;
-        this.indicator = indicator;
-        this.year = year;
-        this.value = value;
-    }
-
-    function YearObject(year) {
-        this.year = year;
-        this.water = new Map();
-        this.soap = new Map();
-    }
-
-    let objects = [];
-
-    function getEuropeanCountries(json) {
-        let features = [];
-        for (let i = 0; i < json.features.length; i++) {
-            if (json.features[i].properties.FIRST_FIRS === "Europe") {
-                features.push(json.features[i]);
-            }
-        }
-        json.features = features;
-        return json;
-    }
-
-    function l(i) {
-        console.log(i);
-    }
-
-    function getCountry(name, countries) {
-        // l(countries);
-        for (let country of countries.features) {
-            if (country_code_mapping.get(country.properties.CNTRY_NAME) === country_code_mapping.get(name)) {
-                return country;
-            }
-        }
-        // l(name);
-    }
-
 
     function initialize() {
         map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
@@ -260,81 +167,96 @@
             maxZoom: 18
         }).addTo(map);
 
+        var slider = document.getElementById("myRange")
+        year = slider.value; // Display the default slider value
+        l("default slider year = " + year);
+
+        slider.oninput = function () {
+            year = this.value;
+            l("slider year: " + year.toString());
+
+            for (let key in foreground) {
+                if (map.hasLayer(foreground[key])) {
+                    l("map is showing " + key);
+                    map.removeLayer(foreground[key]);
+                    control.removeLayer(foreground[key]);
+                    foreground[key] = L.geoJson(european_countries, {
+                        style: function (feature) {
+                            return style(feature, year, key);
+                        }
+                    });
+                    control.addOverlay(foreground[key], key);
+                    map.addLayer(foreground[key]);
+                    break;
+                }
+            }
+        };
+
         shp("files/World/Cntry00").then(countries => {
+            european_countries = getEuropeanCountries(countries);
 
-            // console.log(countries);
-
-            let european_countries = getEuropeanCountries(countries);
-            // console.log(european_countries);
-
-
-            // l(european_countries);
+            // adds default values for every possible data to all countries
             for (let c of european_countries.features) {
-                let attributes = {
-                    SH_H2O_SAFE: 0,
-                    SH_SAN_SAFE: 0,
-                    SH_SAN_HNDWSH: 0
-                };
-                c.properties["year_2015"] = attributes;
-                c.properties["year_2016"] = attributes;
-                c.properties["year_2017"] = attributes;
+                for (y of ["year_2015", "year_2016", "year_2017"]) {
+                    let attributes = {
+                        SH_H2O_SAFE: 0,
+                        SH_SAN_SAFE: 0,
+                        SH_SAN_HNDWSH: 0
+                    };
+                    c.properties[y] = attributes;
+                }
             }
 
-            // l(european_countries);
             loadJSON(function (response) {
                 let json = JSON.parse(response);
-                //
-                // l("test");
-                // l(json);
 
                 for (let entry of json.data) {
                     let country = getCountry(entry.geoAreaName, european_countries);
 
-                    // countries without polygons are ignored, zeroes are always default
-                    if (country !== undefined) {
-                        // l(entry);
-                        // let attributes = {
-                        //     SH_H2O_SAFE: 0,
-                        //     SH_SAN_SAFE: 0,
-                        //     SH_SAN_HNDWSH: 0
-                        // };
-                        if (entry.dimensions.Location === "ALLAREA") {
-                            country.properties["year_" + entry.timePeriodStart.toString()][entry.series] = parseFloat(entry.value);
-                            // attributes[entry.series] = parseFloat(entry.value);
-                        }
-                        // country.properties["year_" + entry.timePeriodStart.toString()] = attributes;
+                    // countries without polygons or data for all area are ignored
+                    if ((country !== undefined) && (entry.dimensions.Location === "ALLAREA")) {
+                        // adds the value to the corresponding time period and series (e.g. year_2015.SH_H2O_SAFE)
+                        country.properties["year_" + entry.timePeriodStart.toString()][entry.series] = parseFloat(entry.value);
                     }
                 }
 
-                l("test");
+                let safe_water = L.geoJson(european_countries, {
+                    style: function (feature) {
+                        return style(feature, year, "Safe and affordable drinking water")
+                    }
+                });
+                let safe_sanitation = L.geoJson(european_countries, {
+                    style: function (feature) {
+                        return style(feature, year, "Safely managed sanitation")
+                    }
+                });
+                let soap_sanitation = L.geoJson(european_countries, {
+                    style: function (feature) {
+                        return style(feature, year, "Handwashing facilities")
+                    }
+                });
 
-                let safe_water = L.geoJson(european_countries, {style: styleSafeWater});
-                let safe_sanitation = L.geoJson(european_countries, {style: styleSafeSanitation});
-                let soap_sanitation = L.geoJson(european_countries, {style: styleSoap});
-                let safe_water_icons = L.layerGroup();
-                addIcons(safe_water_icons,european_countries,"drop",0,"SH_H2O_SAFE");
-                let safe_sanitation_icons = L.layerGroup();
-                addIcons(safe_sanitation_icons,european_countries,"toilet",20,"SH_SAN_SAFE");
-                let soap_icons = L.layerGroup();
-                addIcons(soap_icons,european_countries,"soap",40,"SH_SAN_HNDWSH");
-
-
-                let background = {"Clear map": osm};
-                let foreground = {
+                background = {"Clear map": osm};
+                foreground = {
                     "Safe and affordable drinking water": safe_water,
                     "Safely managed sanitation": safe_sanitation,
                     "Handwashing facilities": soap_sanitation,
-                    "Safe and affordable drinking water icons" : safe_water_icons,
-                    "Safely managed sanitation icons" : safe_sanitation_icons,
-                    "Handwashing facilities icons" : soap_icons
+                    // "Safe and affordable drinking water icons" : safe_water_icons,
+                    // "Safely managed sanitation icons" : safe_sanitation_icons,
+                    // "Handwashing facilities icons" : soap_icons
+
                 };
+                // let safe_water_icons = L.layerGroup();
+                // addIcons(safe_water_icons,european_countries,"drop",0,"SH_H2O_SAFE");
+                // let safe_sanitation_icons = L.layerGroup();
+                // addIcons(safe_sanitation_icons,european_countries,"toilet",20,"SH_SAN_SAFE");
+                // let soap_icons = L.layerGroup();
+                // addIcons(soap_icons,european_countries,"soap",40,"SH_SAN_HNDWSH");
 
-                L.control.layers(background, foreground).addTo(map);
+                control = L.control.layers(background, foreground).addTo(map);
+                control.collapsed = false;
             });
-
-            //     setIcons(data_2015.water);
         });
-
         // legend.onAdd = function (map) {
         //
         //     var div = L.DomUtil.create('div', 'info legend'),
@@ -360,18 +282,84 @@
         // legend.addTo(map);
     }
 
-    function addIcons(layer_group,countries,icon_name,offset,indicator){
-        for (country of countries.features){
-            let value = country.properties.year_2015[indicator];
-            let name = country.properties.CNTRY_NAME;
-            let icons = getIcons("images",icon_name,offset);
-            setIcon(layer_group,name,value,icons);
+    // reads the icons from local directory. Offset is used to show them next to each other
+    function getIcons(path, icon_name, offset) {
+        let icons = [];
+        for (i = 0; i <= 10; i++) {
+            // let factor = (10 + 10 - i) / 10;
+            let factor = 1;
+            icons[i] = L.icon({
+                iconUrl: path + '/' + icon_name + (i * 10) + '.png',
+                iconSize: [20 * factor, 35 * factor], // size of the icon
+                iconAnchor: [20 + offset, 30],
+                popupAnchor: [offset, -32]
+            });
+        }
+        return icons;
+    }
+
+    // concatenates time periods for rest call
+    function GetTimePeriods() {
+        let result = "";
+        timePeriods.forEach(element => {
+            result += ("&timePeriod=" + element);
+        });
+        return result;
+    }
+
+    // concatenates area codes for rest call
+    function GetAreaCodes() {
+        let result = "";
+        for (const [key, value] of country_code_mapping.entries()) {
+            result += ("&areaCode=" + value);
+        }
+        return result;
+    }
+
+    // Fetches the data from the SDG API
+    function loadJSON(callback) {
+        let request = new XMLHttpRequest();
+        request.overrideMimeType("application/json");
+        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + "&pageSize=1000", true);
+        request.onreadystatechange = function () {
+            if (request.readyState == 4 && request.status == "200") {
+                l("Retrieved data");
+                callback(request.responseText);
+            }
+        };
+        request.send(null);
+    }
+
+    // searches list of country for specified name. Uses the area codes to map
+    function getCountry(name, countries) {
+        for (let country of countries.features) {
+            if (country_code_mapping.get(country.properties.CNTRY_NAME) === country_code_mapping.get(name)) {
+                return country;
+            }
         }
     }
 
-    function setIcon(layer,country_name, value,icons) {
+    // returns the right function for each data
+    function getColorFunction(key) {
+        return (key === "Safe and affordable drinking water") ? getColorWater :
+            (key === "Safely managed sanitation") ? getColorSanitation :
+                getColorHandwashing;
+    }
+
+    //  adds all icons for one type of indicator, e.g. SH_H2O_SAFE
+    function addIcons(layer_group, countries, icon_name, offset, indicator) {
+        for (country of countries.features) {
+            let value = country.properties.year_2015[indicator];
+            let name = country.properties.CNTRY_NAME;
+            let icons = getIcons("images", icon_name, offset);
+            setIcon(layer_group, name, value, icons);
+        }
+    }
+
+    // creates a new marker on the position of the specified country showing the right icon for the given value
+    function setIcon(layer, country_name, value, icons) {
         // console.log("setting icon for " + country_name);
-        let icon = getIcon(value,icons);
+        let icon = getIcon(value, icons);
         var encoded = encodeURI([geocodeUrl, country_name, geocodeParams].join(''));
         var xhr = new XMLHttpRequest();
         xhr.open("GET", encoded, true);
@@ -394,12 +382,14 @@
         xhr.send();
     }
 
+    // creates a marker
     function getMarker(place, icon) {
         return L.marker([place.lat, place.lon],
             {icon: icon});
     }
 
-    function getIcon(value,icons) {
+    // returns right icon for each percentage
+    function getIcon(value, icons) {
         return (value > 99) ? icons[10] :
             (value >= 90) ? icons[9] :
                 (value >= 80) ? icons[8] :
@@ -413,6 +403,7 @@
                                                 icons[0];
     }
 
+    // returns right color for each percentage
     function getColorWater(percentage) {
         return percentage > 99 ? '#001a33' :
             percentage > 98 ? '#00264d' :
@@ -428,6 +419,7 @@
                                                     '#888888';
     }
 
+    // returns right color for each percentage
     function getColorSanitation(percentage) {
         return percentage > 95 ? '#001a00' :
             percentage > 90 ? '#003300' :
@@ -443,6 +435,7 @@
                                                     '#888888';
     }
 
+    // returns right color for each percentage
     function getColorHandwashing(percentage) {
         return percentage > 95 ? '#1a000d' :
             percentage > 90 ? '#33001a' :
@@ -458,9 +451,12 @@
                                                     '#888888';
     }
 
-    function styleSafeSanitation(feature) {
+    // year is specified by slider, key is specified by current active layer
+    function style(feature, year, key) {
+        let getColor = getColorFunction(key);
+        let attribute = attribute_mapping.get(key);
         return {
-            fillColor: getColorSanitation(feature.properties.year_2015.SH_SAN_SAFE),
+            fillColor: getColor(feature.properties["year_" + year][attribute]),
             weight: 2,
             opacity: 1,
             color: 'white',
@@ -469,28 +465,23 @@
         };
     }
 
-    function styleSoap(feature) {
-        return {
-            fillColor: getColorHandwashing(feature.properties.year_2015.SH_SAN_HNDWSH),
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: 0.8
-        };
+    // filters all countries not in europe
+    function getEuropeanCountries(json) {
+        let features = [];
+        for (let i = 0; i < json.features.length; i++) {
+            if (json.features[i].properties.FIRST_FIRS === "Europe") {
+                features.push(json.features[i]);
+            }
+        }
+        json.features = features;
+        return json;
     }
 
-    function styleSafeWater(feature) {
-        // l(JSON.stringify(feature.properties));
-        return {
-            fillColor: getColorWater(feature.properties.year_2015.SH_H2O_SAFE),
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: 0.8
-        };
+    // QOL
+    function l(i) {
+        console.log(i);
     }
+
 </script>
 <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
 </body>
