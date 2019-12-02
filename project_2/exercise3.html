@@ -4,7 +4,6 @@
 <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <value>Leaflet</value>
     <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
     <link rel="stylesheet" type="text/css" href="//cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
@@ -35,21 +34,22 @@
 
 
 <body onload="initialize()">
-
-    <div id="map_canvas"></div>
-    <!-- <div id="checkbox_container">
-        <form>
-            <p>Jahr:</p>
-            <fieldset>
-                <input type="radio" id="2015" name="answer" value="2015" onchange="update()" checked>
-                <label for="2015"> 2015</label>
-                <input type="radio" id="2016" name="answer" value="2016" onchange="update()">
-                <label for="2016"> 2016</label>
-                <input type="radio" id="2017" name="answer" value="2017" onchange="update()">
-                <label for="2017"> 2017</label>
-            </fieldset>
-        </form>
-    </div>-->
+    <h1 class="title" leaflet-browser-print-content>Sustainable Development Goal 6.1 & 6.2</h1>
+    <div id="map_canvas">
+        <div class="leaflet control leaflet-top col-sm-2 col-sm-offset-1">
+            <center>
+                <h1 id="mapTitle">Map Title</h1>
+            </center>
+        </div>
+    </div>
+    <div id="checkbox_container">
+        <p>
+            <label><input type="radio" name="issue" value="water" checked>Water</label>
+            <label><input type="radio" name="issue" value="sanitation">Sanitation</label>
+            <label><input type="radio" name="issue" value="handwash">Handwash</label>
+            <label><input type="radio" name="issue" value="defect">Defection</label>
+        </p>
+    </div>
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
         integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
         crossorigin=""></script>
@@ -57,7 +57,7 @@
 
     <script type="text/javascript" src="states-data.js"></script>
     <script>
-        var map;
+
         const geocodeUrl = 'https://nominatim.openstreetmap.org/search?q=';
         const geocodeParams = '&format=json&limit=1';
         var areaCodes = [
@@ -116,6 +116,7 @@
             "2016",
             "2017"
         ]
+
 
         function GetTimePeriods() {
             result = "";
@@ -180,17 +181,19 @@
                                                                 '#dddddd';
         }
 
-        function style(feature, year) {
+        function style(feature, year, issue) {
             //console.log(feature);
             //console.log(year);
             let data = getData(feature, year);
-            if (data == undefined) {
+            let dataIssue = getIssue(data, issue);
+            if (dataIssue == undefined) {
                 return;
             }
-            console.log(data);
+            console.log(dataIssue);
+
 
             return {
-                fillColor: getColor(data.value),
+                fillColor: getColor(dataIssue.value),
                 weight: 1,
                 opacity: 1,
                 color: 'white',
@@ -198,6 +201,10 @@
                 fillOpacity: 0.7
             };
         }
+
+        let europeData2015;
+        let europeData2016;
+        let europeData2017;
 
         function getData(feature, year) {
             let data;
@@ -211,33 +218,46 @@
             return data;
         }
 
+        function getIssue(data, issue) {
+            if (issue == "water") {
+                return data.water;
+            } else if (issue == "sanitation") {
+                return data.sanitation;
+            } else if (issue == "defect") {
+                return data.defect;
+            } else {
+                return data.handwash;
+            }
+        }
+
 
         // define functionality for every geoJson feature
-        function onEachFeature(feature, layer, year) {
+        function onEachFeature(feature, layer, year, issue) {
             //calculate Population Density
             let data = getData(feature, year);
-            console.log(data);
+            let dataIssue = getIssue(data, issue);
+            console.log(dataIssue);
 
-            if (data == undefined) {
-                data = 0;
+            if (dataIssue == undefined) {
+                dataIssue = 0;
             }
             //console.log(feature);
 
-            if (data.value >= 0) {
-                layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br>" + data.value + "%");
+            if (dataIssue.value >= 0) {
+                layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br>" + dataIssue.value + "%");
             } else {
                 layer.bindPopup("<b>Kein Wert vorhanden</b><br>");
             }
         }
         let europe = [];
-
+        let sliderControl;
+        let layer;
+        let map = L.map('map_canvas').setView([55, 10], 4);
 
         // call on load
         function initialize() {
 
             // initialize map
-            let map = L.map('map_canvas').setView([55, 10], 4);
-
             let osm = new L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
             }).addTo(map);
             var shapefile = 'files/World/Cntry00';
@@ -273,69 +293,82 @@
 
 
                 console.log(data_2015);
-
-                /*data_2015.sanitation.forEach(country => {
-                    europe.forEach(input => {
-                        //console.log(input);
-                        //match countries
-                        if (input.properties.CNTRY_NAME == country.country) {
-                            input.data = country;
-                        } else if (country.country.includes(input.properties.CNTRY_NAME)
-                            || input.properties.CNTRY_NAME.includes(country.country)) {
-                            input.data = country;
-                        } else if (input.properties.CNTRY_NAME == "Bosnia & Herzegovina"
-                            && country.country == "Bosnia and Herzegovina") {
-                            input.data = country;
-                        } else if (input.properties.CNTRY_NAME == "Czech Republic"
-                            && country.country == "Czechia") {
-                            input.data = country;
-                        }
-                    });
-                })*/
-
-                europe.forEach(input => {
-                    input.data_2015 = data_2015.water.get(input.properties.CNTRY_NAME);
-                    input.data_2016 = data_2016.water.get(input.properties.CNTRY_NAME);
-                    input.data_2017 = data_2017.water.get(input.properties.CNTRY_NAME);
-                });
-
                 console.log(europe);
 
-                //Möglichkeiten: 1. Vergleich Countries, 2. Während shape 
-                let europeData2015 = L.geoJson(europe, {
-                    style: function (feature) { return style(feature, "2015") },
-                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2015") },
-                    time: "2015"
-                }).addTo(map);
-                let europeData2016 = L.geoJson(europe, {
-                    style: function (feature) { return style(feature, "2016") },
-                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2016") },
-                    time: "2016"
-                }).addTo(map);
-                let europeData2017 = L.geoJson(europe, {
-                    style: function (feature) { return style(feature, "2017") },
-                    onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2017") },
-                    time: "2017"
-                }).addTo(map);
+                europe.forEach(input => {
+                    //console.log(input);
+                    //match countries
+                    if (input.properties.CNTRY_NAME == "Faroe Is.") {
+                        input.properties.CNTRY_NAME = "Faroe Islands";
+                    } else if (input.properties.CNTRY_NAME == "United Kingdom") {
+                        input.properties.CNTRY_NAME = "United Kingdom of Great Britain and Northern Ireland";
+                    } else if (input.properties.CNTRY_NAME == "Bosnia & Herzegovina") {
+                        input.properties.CNTRY_NAME = "Bosnia and Herzegovina";
+                    } else if (input.properties.CNTRY_NAME == "Czech Republic") {
+                        input.properties.CNTRY_NAME = "Czechia";
+                    } else if (input.properties.CNTRY_NAME == "Moldova") {
+                        input.properties.CNTRY_NAME = "Republic of Moldova";
+                    }
+                });
 
-                //now add each geojson layer to a single layer group, as the slider take only one layer
-                var layerGroup = L.layerGroup([europeData2015, europeData2016, europeData2017]);
+                europe.forEach(input => {
+                    input.data_2015 = [];
+                    input.data_2016 = [];
+                    input.data_2017 = [];
+                    input.data_2015.water = data_2015.water.get(input.properties.CNTRY_NAME);
+                    input.data_2016.water = data_2016.water.get(input.properties.CNTRY_NAME);
+                    input.data_2017.water = data_2017.water.get(input.properties.CNTRY_NAME);
+                    input.data_2015.sanitation = data_2015.sanitation.get(input.properties.CNTRY_NAME);
+                    input.data_2016.sanitation = data_2016.sanitation.get(input.properties.CNTRY_NAME);
+                    input.data_2017.sanitation = data_2017.sanitation.get(input.properties.CNTRY_NAME);
+                    input.data_2015.handwash = data_2015.handwash.get(input.properties.CNTRY_NAME);
+                    input.data_2016.handwash = data_2016.handwash.get(input.properties.CNTRY_NAME);
+                    input.data_2017.handwash = data_2017.handwash.get(input.properties.CNTRY_NAME);
+                    input.data_2015.defect = data_2015.defect.get(input.properties.CNTRY_NAME);
+                    input.data_2016.defect = data_2016.defect.get(input.properties.CNTRY_NAME);
+                    input.data_2017.defect = data_2017.defect.get(input.properties.CNTRY_NAME);
+                });
 
-                //initiate slider, follow = 1 means, show one feature at a time
-                var sliderControl = L.control.sliderControl({ layer: layerGroup, follow: 1 });
-                map.addControl(sliderControl);//add slider to map
-                sliderControl.startSlider();
+                //console.log(europe);
 
-
-
-
-
+                //Default-slider: water
+                addSlider("water");
             });
-
-
-
         }
 
+
+        function addSlider(issue) {
+            let europeData2015 = L.geoJson(europe, {
+                style: function (feature) { return style(feature, "2015", issue) },
+                onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2015", issue) },
+                time: "2015"
+            }).addTo(map);
+            let europeData2016 = L.geoJson(europe, {
+                style: function (feature) { return style(feature, "2016", issue) },
+                onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2016", issue) },
+                time: "2016"
+            }).addTo(map);
+            let europeData2017 = L.geoJson(europe, {
+                style: function (feature) { return style(feature, "2017", issue) },
+                onEachFeature: function (feature, layer) { return onEachFeature(feature, layer, "2017", issue) },
+                time: "2017"
+            }).addTo(map);
+
+            //now add each geojson layer to a single layer group, as the slider take only one layer
+            layer = L.layerGroup([europeData2015, europeData2016, europeData2017]);
+
+            //initiate slider, follow = 1 means, show one feature at a time
+            sliderControl = L.control.sliderControl({ layer: layer, follow: 1 });
+            map.addControl(sliderControl);//add slider to map
+            sliderControl.startSlider();
+        }
+
+        $('#checkbox_container').change(function () {
+            event.preventDefault();
+            sliderControl.onRemove(map);
+            let issue = $("input[name='issue']:checked").val();
+            addSlider(issue);
+        });
 
 
         function sortToIssue(country, data) {
