@@ -24,6 +24,23 @@
             height: 95%;
         }
 
+        .legend {
+            line-height: 18px;
+            color: #555;
+            background-color: #ffffff;
+            border-style: solid;
+            border-color: black;
+            border-width: 1px;
+        }
+
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 1;
+        }
+
         .slider {
             -webkit-appearance: none;
             width: 100%;
@@ -174,6 +191,10 @@
         "2018"
     ];
 
+    let legend_h2o_safe = L.control({position: 'bottomright'});
+    let legend_save_hndwsh = L.control({position: 'bottomright'});
+    let legend_safe_san = L.control({position: 'bottomright'});
+
     function initialize() {
         map = L.map('map_canvas').setView([53.81, 14.16], 3.5);
 
@@ -276,29 +297,82 @@
                 control.collapsed = false;
             });
         });
-        // legend.onAdd = function (map) {
-        //
-        //     var div = L.DomUtil.create('div', 'info legend'),
-        //         grades = [0, 5, 10, 20, 40, 70, 100, 150, 200, 300, 400, 600, 1000],
-        //         labels = ["<strong> Einwohner pro km² </strong>"], from, to;
-        //
-        //
-        //
-        //     for (var i = 0; i < grades.length; i++) {
-        //         from = grades[i];
-        //         to = grades[i + 1];
-        //
-        //         labels.push(
-        //             '<i style="background:' + getColor(from + 1) + '"></i> ' +
-        //             from + (to ? '&ndash;' + to : '+'));
-        //     }
-        //     labels.push('<i style="background:' + getColor(grades[0]) + '"></i> ' + 'n/a');
-        //     div.innerHTML = labels.join('<br>');
-        //     return div;
-        //
-        //
-        // };
-        // legend.addTo(map);
+
+
+        legend_h2o_safe.onAdd = function (map) {
+
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = [0, 50, 60, 70, 80, 90, 95, 96, 97, 98, 99],
+                labels = ["<strong>Population percentage with access to safe and affordable drinking water</strong>"], from, to;
+
+            for (var i = 0; i < grades.length; i++) {
+                from = grades[i];
+                to = grades[i + 1];
+
+                labels.push(
+                    '<i style="background:' + getColorWater(from + 1) + '"></i> ' +
+                    from + (to ? '&ndash;' + to : '+'));
+            }
+            labels.push('<i style="background:' + getColorWater(grades[0]) + '"></i> ' + 'n/a');
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+
+        legend_save_hndwsh.onAdd = function (map) {
+
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = [0, 10, 20, 30, 40, 50, 60,70,80,90,95],
+                labels = ["<strong>Population percentage with access to safe and affordable drinking water</strong>"], from, to;
+
+            for (var i = 0; i < grades.length; i++) {
+                from = grades[i];
+                to = grades[i + 1];
+
+                labels.push(
+                    '<i style="background:' + getColorHandwashing(from + 1) + '"></i> ' +
+                    from + (to ? '&ndash;' + to : '+'));
+            }
+            labels.push('<i style="background:' + getColorHandwashing(grades[0]) + '"></i> ' + 'n/a');
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+
+        legend_safe_san.onAdd = function (map) {
+
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = [0, 10, 20, 30, 40, 50, 60,70,80,90,95],
+                labels = ["<strong>Population percentage with access to safe and affordable drinking water</strong>"], from, to;
+
+            for (var i = 0; i < grades.length; i++) {
+                from = grades[i];
+                to = grades[i + 1];
+
+                labels.push(
+                    '<i style="background:' + getColorSanitation(from + 1) + '"></i> ' +
+                    from + (to ? '&ndash;' + to : '+'));
+            }
+            labels.push('<i style="background:' + getColorSanitation(grades[0]) + '"></i> ' + 'n/a');
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+
+        map.on("overlayremove",function(eventLayer){
+            this.removeControl(legend_safe_san);
+            this.removeControl(legend_save_hndwsh);
+            this.removeControl(legend_h2o_safe);
+        });
+        map.on('overlayadd', function (eventLayer) {
+            // Switch to the Population legend...
+            if (eventLayer.name === "Safe and affordable drinking water") {
+                legend_h2o_safe.addTo(this);
+            } else if (eventLayer.name === "Safely managed sanitation"){ // Or switch to the Population Change legend...
+                legend_safe_san.addTo(this);
+            } else {
+                //"Handwashing facilities"
+                legend_save_hndwsh.addTo(this);
+            }
+        });
+
     }
 
     // reads the icons from local directory. Offset is used to show them next to each other
@@ -442,7 +516,7 @@
     function getColorSanitation(percentage) {
         return percentage > 95 ? '#001a00' :
             percentage > 90 ? '#003300' :
-                percentage > 800 ? '#004d00' :
+                percentage > 80 ? '#004d00' :
                     percentage > 70 ? '#006600' :
                         percentage > 60 ? '#008000' :
                             percentage > 50 ? '#00cc00' :
@@ -474,7 +548,7 @@
     function style(feature, year, key) {
         let getColor = getColorFunction(key);
         let attribute = attribute_mapping.get(key);
-        l((feature.properties["year_" + year][attribute]));
+        // l((feature.properties["year_" + year][attribute]));
         return {
             fillColor: getColor(feature.properties["year_" + year][attribute]),
             weight: 2,
