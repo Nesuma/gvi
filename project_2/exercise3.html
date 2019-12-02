@@ -60,7 +60,7 @@
 
 <body onload="initialize()">
 <div id="map_canvas"></div>
-<input type="range" min="2015" max="2017" value="2015" class="slider" id="myRange">
+<input type="range" min="2000" max="2018" value="2015" class="slider" id="myRange">
 <div class="slider_div">
 
 </div>
@@ -153,9 +153,25 @@
     ]);
 
     let timePeriods = [
+        "2000",
+        "2001",
+        "2002",
+        "2003",
+        "2004",
+        "2005",
+        "2006",
+        "2007",
+        "2008",
+        "2009",
+        "2010",
+        "2011",
+        "2012",
+        "2013",
+        "2014",
         "2015",
         "2016",
-        "2017"
+        "2017",
+        "2018"
     ];
 
     function initialize() {
@@ -172,11 +188,12 @@
         l("default slider year = " + year);
 
         slider.oninput = function () {
-            year = this.value;
-            l("slider year: " + year.toString());
-
             for (let key in foreground) {
                 if (map.hasLayer(foreground[key])) {
+                    //slider non functional until a layer is set
+                    year = this.value;
+                    l("slider year: " + year.toString());
+
                     l("map is showing " + key);
                     map.removeLayer(foreground[key]);
                     control.removeLayer(foreground[key]);
@@ -197,13 +214,13 @@
 
             // adds default values for every possible data to all countries
             for (let c of european_countries.features) {
-                for (y of ["year_2015", "year_2016", "year_2017"]) {
+                for (y of timePeriods) {
                     let attributes = {
                         SH_H2O_SAFE: 0,
                         SH_SAN_SAFE: 0,
                         SH_SAN_HNDWSH: 0
                     };
-                    c.properties[y] = attributes;
+                    c.properties["year_"+y] = attributes;
                 }
             }
 
@@ -219,6 +236,8 @@
                         country.properties["year_" + entry.timePeriodStart.toString()][entry.series] = parseFloat(entry.value);
                     }
                 }
+
+                l(european_countries);
 
                 let safe_water = L.geoJson(european_countries, {
                     style: function (feature) {
@@ -320,7 +339,7 @@
     function loadJSON(callback) {
         let request = new XMLHttpRequest();
         request.overrideMimeType("application/json");
-        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + "&pageSize=1000", true);
+        request.open('GET', 'https://unstats.un.org/SDGAPI/v1/sdg/Target/Data?target=6.1&target=6.2' + GetAreaCodes() + GetTimePeriods() + "&pageSize=100000", true);
         request.onreadystatechange = function () {
             if (request.readyState == 4 && request.status == "200") {
                 l("Retrieved data");
@@ -455,6 +474,7 @@
     function style(feature, year, key) {
         let getColor = getColorFunction(key);
         let attribute = attribute_mapping.get(key);
+        l((feature.properties["year_" + year][attribute]));
         return {
             fillColor: getColor(feature.properties["year_" + year][attribute]),
             weight: 2,
