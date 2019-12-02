@@ -38,7 +38,7 @@
 
         .legend i {
             width: 18px;
-            height: 16px;
+            height: 15.3px;
             float: left;
             margin-right: 8px;
             opacity: 1;
@@ -353,17 +353,6 @@
 
                 //Default-slider: water
                 addSlider("water");
-                /*let radioBox = L.control({ position: 'bottomleft' });
-                                radioBox.onAdd = function (map) {
-                                    let div = L.DomUtil.create('div', 'checkbox_container');
-                                    div.innerHTML = '<fieldset id="changeItem"><h3>GOAL 6</h3><ul style="list-style-type:none">' +
-                                        '<li><label><input type="radio" name="issue" value="water" checked>INDICATOR 6.1.1:  SH_H2O_SAFE</label></li>' +
-                                        '<li><label><input type="radio" name="issue" value="sanitation">INDICATOR 6.2.1:  SH_SAN_SAFE</label></li>' +
-                                        '<li><label><input type="radio" name="issue" value="handwash">INDICATOR 6.2.1: SH_SAN_HNDWSH</label></li>' +
-                                        '<li><label><input type="radio" name="issue" value="defect">INDICATOR 6.2.1: SH_SAN_DEFECT</label></li></ul></fieldset>';
-                                    return div;
-                                };
-                                radioBox.addTo(map);*/
                 let legend = L.control({ position: 'bottomright' });
                 legend.onAdd = function (map) {
                     let div = L.DomUtil.create('div', 'info legend'),
