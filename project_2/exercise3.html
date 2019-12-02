@@ -14,6 +14,42 @@
         body {
             width: 100%;
             height: 100%;
+            font: Arial, Helvetica, sans-serif;
+        }
+
+        #checkbox_container,
+        .legend {
+            padding: 6px 8px;
+            line-height: 18px;
+            color: #555;
+            background-color: #ffffff;
+            border-style: solid;
+            border-color: black;
+            border-width: 1px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .legend i {
+            width: 18px;
+            height: 16px;
+            float: left;
+            margin-right: 8px;
+            opacity: 1;
+        }
+
+        #checkbox_container {
+            position: fixed;
+            bottom: 2em;
+            left: 1em;
+            z-index: 1000;
+            opacity: 1.0;
         }
 
         body {
@@ -23,7 +59,7 @@
 
         #map_canvas {
             width: 100%;
-            height: 100%;
+            height: 90%;
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -34,20 +70,25 @@
 
 
 <body onload="initialize()">
-    <h1 class="title" leaflet-browser-print-content>Sustainable Development Goal 6.1 & 6.2</h1>
-    <div id="map_canvas">
-        <div class="leaflet control leaflet-top col-sm-2 col-sm-offset-1">
-            <center>
-                <h1 id="mapTitle">Map Title</h1>
-            </center>
-        </div>
-    </div>
+    <h1 class="title" leaflet-browser-print-content>Sustainable Development Goal 6.1 & 6.2 in Europe</h1>
+    <div id="map_canvas"></div>
     <div id="checkbox_container">
-        <p>
-            <label><input type="radio" name="issue" value="water" checked>Water</label>
-            <label><input type="radio" name="issue" value="sanitation">Sanitation</label>
-            <label><input type="radio" name="issue" value="handwash">Handwash</label>
-            <label><input type="radio" name="issue" value="defect">Defection</label>
+        <h4>Proportion of population:</h4>
+        <ul style="list-style-type:none">
+            <li>
+                <label><input type="radio" name="issue" value="water" checked>using safely managed drinking water services</label>
+            </li>
+            <li>
+                <label><input type="radio" name="issue" value="sanitation">using safely managed sanitation services</label>
+            </li>
+            <li>
+                <label><input type="radio" name="issue" value="handwash">with basic handwashing facilities on premises</label>
+            </li>
+            <li>
+                <label><input type="radio" name="issue" value="defect">practicing open defecation</label>
+            </li>
+            <li>
+        </ul>
         </p>
     </div>
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
@@ -164,21 +205,19 @@
 
         let objects = [];
 
-        function getColor(density) {
-            return density > 1000 ? '#00001a' :
-                density > 600 ? '#000033' :
-                    density > 400 ? '#00004d' :
-                        density > 300 ? '#000066' :
-                            density > 200 ? '#000080' :
-                                density > 150 ? '#0000cc' :
-                                    density > 100 ? '#0000e6' :
-                                        density > 70 ? '#3333ff' :
-                                            density > 40 ? '#4d4dff' :
-                                                density > 20 ? '#8080ff' :
-                                                    density > 10 ? '#b3b3ff' :
-                                                        density > 5 ? '#ccccff' :
-                                                            density > 0 ? '#e6e6ff' :
-                                                                '#dddddd';
+        function getColor(percentage) {
+            return percentage > 99 ? '#001a33' :
+                percentage > 98 ? '#00264d' :
+                    percentage > 97 ? '#003366' :
+                        percentage > 96 ? '#004080' :
+                            percentage > 95 ? '#004d99' :
+                                percentage > 90 ? '#0066cc' :
+                                    percentage > 80 ? '#0080ff' :
+                                        percentage > 70 ? '#3399ff' :
+                                            percentage > 60 ? '#66b3ff' :
+                                                percentage > 50 ? '#99ccff' :
+                                                    percentage > 0 ? '#cce6ff' :
+                                                        '#888888';
         }
 
         function style(feature, year, issue) {
@@ -187,7 +226,7 @@
             let data = getData(feature, year);
             let dataIssue = getIssue(data, issue);
             if (dataIssue == undefined) {
-                return;
+                dataIssue = 0;
             }
             console.log(dataIssue);
 
@@ -198,7 +237,7 @@
                 opacity: 1,
                 color: 'white',
                 dashArray: '1',
-                fillOpacity: 0.7
+                fillOpacity: 1
             };
         }
 
@@ -246,7 +285,7 @@
             if (dataIssue.value >= 0) {
                 layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br>" + dataIssue.value + "%");
             } else {
-                layer.bindPopup("<b>Kein Wert vorhanden</b><br>");
+                layer.bindPopup("<b>" + feature.properties.CNTRY_NAME + "</b><br><b>Kein Wert vorhanden</b><br>");
             }
         }
         let europe = [];
@@ -291,27 +330,8 @@
                     }
                 });
 
-
-                console.log(data_2015);
-                console.log(europe);
-
                 europe.forEach(input => {
-                    //console.log(input);
-                    //match countries
-                    if (input.properties.CNTRY_NAME == "Faroe Is.") {
-                        input.properties.CNTRY_NAME = "Faroe Islands";
-                    } else if (input.properties.CNTRY_NAME == "United Kingdom") {
-                        input.properties.CNTRY_NAME = "United Kingdom of Great Britain and Northern Ireland";
-                    } else if (input.properties.CNTRY_NAME == "Bosnia & Herzegovina") {
-                        input.properties.CNTRY_NAME = "Bosnia and Herzegovina";
-                    } else if (input.properties.CNTRY_NAME == "Czech Republic") {
-                        input.properties.CNTRY_NAME = "Czechia";
-                    } else if (input.properties.CNTRY_NAME == "Moldova") {
-                        input.properties.CNTRY_NAME = "Republic of Moldova";
-                    }
-                });
-
-                europe.forEach(input => {
+                    matchCountry(input);
                     input.data_2015 = [];
                     input.data_2016 = [];
                     input.data_2017 = [];
@@ -333,6 +353,37 @@
 
                 //Default-slider: water
                 addSlider("water");
+                /*let radioBox = L.control({ position: 'bottomleft' });
+                                radioBox.onAdd = function (map) {
+                                    let div = L.DomUtil.create('div', 'checkbox_container');
+                                    div.innerHTML = '<fieldset id="changeItem"><h3>GOAL 6</h3><ul style="list-style-type:none">' +
+                                        '<li><label><input type="radio" name="issue" value="water" checked>INDICATOR 6.1.1:  SH_H2O_SAFE</label></li>' +
+                                        '<li><label><input type="radio" name="issue" value="sanitation">INDICATOR 6.2.1:  SH_SAN_SAFE</label></li>' +
+                                        '<li><label><input type="radio" name="issue" value="handwash">INDICATOR 6.2.1: SH_SAN_HNDWSH</label></li>' +
+                                        '<li><label><input type="radio" name="issue" value="defect">INDICATOR 6.2.1: SH_SAN_DEFECT</label></li></ul></fieldset>';
+                                    return div;
+                                };
+                                radioBox.addTo(map);*/
+                let legend = L.control({ position: 'bottomright' });
+                legend.onAdd = function (map) {
+                    let div = L.DomUtil.create('div', 'info legend'),
+                        grades = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95],
+                        labels = ["<strong>Percentage</strong>"],
+                        from, to;
+                    for (var i = 0; i < grades.length; i++) {
+                        from = grades[i];
+                        to = grades[i + 1];
+                        console.log(getColor(from + 1));
+
+                        labels.push(
+                            '<i style="background:' + getColor(from + 1) + '"></i> ' +
+                            from + (to ? '&ndash;' + to : '+'));
+                    }
+                    labels.push('<i style="background:' + getColor(0) + '"></i> ' + 'n/a');
+                    div.innerHTML = labels.join('<br>');
+                    return div;
+                };
+                legend.addTo(map);
             });
         }
 
@@ -361,6 +412,25 @@
             sliderControl = L.control.sliderControl({ layer: layer, follow: 1 });
             map.addControl(sliderControl);//add slider to map
             sliderControl.startSlider();
+        }
+
+
+        function matchCountry(input) {
+            if (input.properties.CNTRY_NAME == "Faroe Is.") {
+                input.properties.CNTRY_NAME = "Faroe Islands";
+            } else if (input.properties.CNTRY_NAME == "United Kingdom") {
+                input.properties.CNTRY_NAME = "United Kingdom of Great Britain and Northern Ireland";
+            } else if (input.properties.CNTRY_NAME == "Bosnia & Herzegovina") {
+                input.properties.CNTRY_NAME = "Bosnia and Herzegovina";
+            } else if (input.properties.CNTRY_NAME == "Czech Republic") {
+                input.properties.CNTRY_NAME = "Czechia";
+            } else if (input.properties.CNTRY_NAME == "Moldova") {
+                input.properties.CNTRY_NAME = "Republic of Moldova";
+            } else if (input.properties.CNTRY_NAME == "Serbia & Montenegro") {
+                input.properties.CNTRY_NAME = "Serbia";
+            } else if (input.properties.CNTRY_NAME == "Macedonia") {
+                input.properties.CNTRY_NAME = "North Macedonia";
+            }
         }
 
         $('#checkbox_container').change(function () {
